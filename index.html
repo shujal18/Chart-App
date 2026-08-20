@@ -272,7 +272,7 @@ const EMOJIS=['😀','😂','❤️','👍','🔥','😍','🥰','😎','🤔','
 let ws=null,myName='',myAvatar='',currentRoom='',isCreating=false;
 let reconnectDelay=1000,maxReconnectDelay=30000,reconnectTimer=null;
 let pendingReply=null,typingTimeout=null,typingState=false;
-let allMessages=[],selectedMsg=null,seenMsgIds=new Set();
+let allMessages=[],selectedMsg=null,seenMsgIds=new Set(),myMessages=new Set();
 let pendingPhoto=null,onlineUsers=[];
 const seenTyping=new Set();
 
@@ -560,7 +560,8 @@ $('#msgInput').addEventListener('input',()=>{
 function sendMessage(){
   if(sending)return;
   const inp=$('#msgInput');const text=inp.value.trim();
-  if((!text&&!pendingPhoto)||!ws||ws.readyState!==1)return;
+  if(!ws||ws.readyState!==1)return;
+  if(!text&&!pendingPhoto)return;
   sending=true;setTimeout(()=>sending=false,300);
 
   const editId=inp.dataset.editId;
