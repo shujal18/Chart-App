@@ -269,7 +269,7 @@ const APP_PASSWORD='1116';
 const AVATARS=['😀','😂','🥹','😍','🥰','😎','🤩','😏','🤔','🫡','😭','🥺','💀','🤖','👻','🐱','🐶','🦊','🐼','🦁','🐸','🌍','🔥','⭐','💎','🎮','🎵','🏆','🚀','⚡'];
 const EMOJIS=['😀','😂','❤️','👍','🔥','😍','🥰','😎','🤔','😭','🥺','✨','🎉','👋','💯','🙌','😅','🤣','😊','😇','🙂','😉','😌','😍','🥰','😘','😗','😙','😚','😋','😛','😜','🤪','😝','🤑','🤗','🤭','🤫','🤔','🫡','🤐','🤨','😐','😑','😶','😏','😒','🙄','😬','🤥','😌','😔','😪','🤤','😴','😷','🤒','🤕','🤢','🤮','🥵','🥶','🥴','😵','🤯','🤠','🥳','🥸','😎','🤓','🧐','😕','😟','🙁','😮','😯','😲','😳','🥺','😦','😧','😨','😰','😥','😢','😭','😱','😖','😣','😞','😓','😩','😫','🥱','😤','😡','😠','🤬','😈','👿','💀','👻','👽','🤖','💩','❤️','🧡','💛','💚','💙','💜','🖤','🤍','🤎','💔','❣️','💕','💞','💓','💗','💖','💘','💝','⭐','🌟','💫','🌈','☀️','🌤️','⛅','🌥️','☁️','🌧️','🌮','🍕','🍔','🍟','🎮','🎯','🏆','🎪','🎨','🎭','🎤','🎧','🎵','🎶','🎸','🎹','🥁'];
 
-let ws=null,myName='',myAvatar='',currentRoom='';
+let ws=null,myName='',myAvatar='',currentRoom='',isCreating=false;
 let reconnectDelay=1000,maxReconnectDelay=30000,reconnectTimer=null;
 let pendingReply=null,typingTimeout=null,typingState=false;
 let allMessages=[],selectedMsg=null,seenMsgIds=new Set();
@@ -356,16 +356,16 @@ $('#photoClose').addEventListener('click',()=>{pendingPhoto=null;$('#photoPrevie
 // ========= ROOM =========
 $('#createRoomBtn').addEventListener('click',()=>{
   const code=Math.random().toString(36).substring(2,8).toUpperCase();
-  $('#roomCodeInput').value=code;joinRoom(code);
+  $('#roomCodeInput').value=code;joinRoom(code,true);
 });
 $('#joinRoomBtn').addEventListener('click',()=>{
   const code=$('#roomCodeInput').value.trim().toUpperCase();
-  if(code)joinRoom(code);else showToast('Enter a room code');
+  if(code)joinRoom(code,false);else showToast('Enter a room code');
 });
 $('#roomCodeInput').addEventListener('keydown',e=>{if(e.key==='Enter')$('#joinRoomBtn').click()});
 
-function joinRoom(code){
-  currentRoom=code;connectWS();
+function joinRoom(code,creating){
+  currentRoom=code;isCreating=!!creating;connectWS();
   $('#roomName').textContent='Room: '+code;
   $('#headerAvatar').textContent=myAvatar;
   showScreen('chat');$('#msgInput').focus();
@@ -378,6 +378,7 @@ function connectWS(){
     ws=new WebSocket('wss://'+SERVER_HOST);
     ws.onopen=()=>{
       reconnectDelay=1000;clearTimeout(reconnectTimer);
+      if(isCreating)ws.send(JSON.stringify({type:'generate_code',code:currentRoom}));
       ws.send(JSON.stringify({type:'join',room:currentRoom,username:myName,avatar:myAvatar}));
     };
     ws.onmessage=e=>handleMessage(JSON.parse(e.data));
@@ -574,6 +575,7 @@ function sendMessage(){
     const photo=pendingPhoto||null;
     ws.send(JSON.stringify({type:'message',text:text||'📷 Photo',id,timestamp:ts,fullTime:formatTime(ts),replyTo,photo}));
     seenMsgIds.add(id);
+    onNewMessage({id,sender:myName,avatar:myAvatar,text:text||'📷 Photo',timestamp:ts,fullTime:formatTime(ts),replyTo,photo,edited:false});
   }
   inp.value='';
   pendingPhoto=null;$('#photoPreview').classList.remove('active');
