@@ -16,6 +16,7 @@ const rooms = {};
 let latestPublicCode = "";
 const MAX_PER_ROOM = 6;
 const MAX_HISTORY = 50;
+const MSG_TTL = 3 * 60 * 1000;
 const INACTIVE_TIMEOUT = 5 * 60 * 1000;
 
 function heartbeat() { this.isAlive = true; }
@@ -35,8 +36,17 @@ const cleanupInterval = setInterval(() => {
             delete rooms[code];
             console.log(`Cleaned up inactive room: ${code}`);
         }
+        if (rooms[code] && rooms[code].messages.length > 0) {
+            const oldLen = rooms[code].messages.length;
+            rooms[code].messages = rooms[code].messages.filter(m => now - (m.timestamp || 0) < MSG_TTL);
+            if (rooms[code].messages.length < oldLen) {
+                rooms[code].users.forEach(c => {
+                    if (c.readyState === WebSocket.OPEN) c.send(JSON.stringify({ type: "cleanup" }));
+                });
+            }
+        }
     }
-}, 60000);
+}, 30000);
 
 wss.on("connection", (ws) => {
     ws.isAlive = true;
@@ -69,7 +79,9 @@ wss.on("connection", (ws) => {
                     rooms[ws.room].lastActivity = Date.now();
 
                     ws.send(JSON.stringify({ type: "join_success", room: ws.room }));
-                    rooms[ws.room].messages.forEach(m => ws.send(JSON.stringify({ type: "message", message: m })));
+                    const now = Date.now();
+                    rooms[ws.room].messages.filter(m => now - (m.timestamp || 0) < MSG_TTL)
+                        .forEach(m => ws.send(JSON.stringify({ type: "message", message: m })));
 
                     broadcast(ws.room, { type: "system", text: `${ws.avatar} ${ws.username} joined!` });
                     broadcastOnline(ws.room);
@@ -79,12 +91,13 @@ wss.on("connection", (ws) => {
             }
 
             if (data.type === "message" && ws.room) {
+                const ts = data.timestamp || Date.now();
                 const msgPayload = {
                     id: data.id || "msg-" + Date.now(),
                     sender: ws.username,
                     avatar: ws.avatar,
                     text: data.text,
-                    timestamp: data.timestamp,
+                    timestamp: ts,
                     fullTime: data.fullTime,
                     replyTo: data.replyTo,
                     edited: false

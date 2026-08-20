@@ -7,16 +7,26 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-:root{
---bg:#0b141a;--header:#202c33;--input:#2a3942;--sent:#005c4b;
---received:#202c33;--text:#e9edef;--secondary:#8696a0;--accent:#00a884;
---blue-tick:#53bdeb;--hover:#2a3942;--divider:#111b21;--overlay:rgba(0,0,0,0.5)
-}
+:root{--bg:#0b141a;--header:#202c33;--input:#2a3942;--sent:#005c4b;--received:#202c33;--text:#e9edef;--secondary:#8696a0;--accent:#00a884;--blue-tick:#53bdeb;--hover:#2a3942;--divider:#111b21;--overlay:rgba(0,0,0,0.5);--danger:#ea4335}
 html,body{height:100%;width:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text)}
 body{position:fixed;top:0;left:0;right:0;bottom:0;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
 #app{width:100%;height:100%;max-width:480px;margin:0 auto;position:relative;overflow:hidden}
 .screen{display:none;position:absolute;top:0;left:0;width:100%;height:100%;flex-direction:column}
 .screen.active{display:flex}
+
+/* Password Screen */
+#password{background:var(--bg);align-items:center;justify-content:center;padding:20px}
+#password .pw-icon{font-size:60px;margin-bottom:16px}
+#password h2{font-size:20px;margin-bottom:24px;font-weight:400;color:var(--secondary)}
+#password .pw-dots{display:flex;gap:12px;margin-bottom:24px}
+#password .pw-dot{width:14px;height:14px;border-radius:50%;background:var(--input);transition:background .2s}
+#password .pw-dot.filled{background:var(--accent)}
+#password .pw-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;max-width:260px;width:100%}
+#password .pw-key{width:100%;aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:500;border:none;border-radius:12px;background:var(--input);color:var(--text);cursor:pointer;transition:background .15s}
+#password .pw-key:active{background:var(--hover)}
+#password .pw-key.empty{background:transparent;cursor:default}
+#password .pw-key.del{font-size:16px;color:var(--danger)}
+#password .pw-err{color:var(--danger);font-size:13px;margin-top:12px;min-height:18px}
 
 /* Setup Screen */
 #setup{background:var(--bg);align-items:center;justify-content:center;padding:20px}
@@ -40,7 +50,7 @@ body{position:fixed;top:0;left:0;right:0;bottom:0;padding:env(safe-area-inset-to
 #room input::placeholder{text-transform:none;letter-spacing:normal}
 #room button{width:100%;padding:14px;border:none;border-radius:12px;background:var(--accent);color:#fff;font-size:16px;font-weight:500;cursor:pointer;transition:opacity .2s}
 #room .divider{display:flex;align-items:center;width:100%;max-width:320px;margin:16px 0;color:var(--secondary);font-size:13px}
-#room .divider::before,.room .divider::after{content:'';flex:1;height:1px;background:var(--input)}
+#room .divider::before,#room .divider::after{content:'';flex:1;height:1px;background:var(--input)}
 #room .divider span{padding:0 12px}
 
 /* Chat Screen */
@@ -50,10 +60,14 @@ body{position:fixed;top:0;left:0;right:0;bottom:0;padding:env(safe-area-inset-to
 #chat .chat-header .header-avatar{width:40px;height:40px;border-radius:50%;background:var(--input);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
 #chat .chat-header .header-info{flex:1;min-width:0}
 #chat .chat-header .room-name{font-size:16px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}
-#chat .chat-header .room-status{font-size:12px;color:var(--secondary);display:flex;align-items:center;gap:4px}
+#chat .chat-header .room-status{font-size:12px;color:var(--secondary);display:flex;align-items:center;gap:4px;flex-wrap:wrap}
 #chat .chat-header .conn-dot{width:7px;height:7px;border-radius:50%;display:inline-block;flex-shrink:0}
 #chat .chat-header .conn-dot.online{background:#25d366}
 #chat .chat-header .conn-dot.offline{background:#ea4335}
+#chat .chat-header .user-pills{display:flex;gap:4px;flex-wrap:wrap;margin-top:2px}
+#chat .chat-header .user-pill{display:inline-flex;align-items:center;gap:3px;background:var(--input);border-radius:10px;padding:1px 8px 1px 3px;font-size:11px;color:var(--secondary)}
+#chat .chat-header .user-pill .pill-avatar{font-size:13px}
+#chat .chat-header .user-pill .pill-dot{width:5px;height:5px;border-radius:50%;background:#25d366;flex-shrink:0}
 #chat .chat-header .header-actions{display:flex;gap:2px}
 #chat .chat-header .header-actions button{width:40px;height:40px;display:flex;align-items:center;justify-content:center;background:none;border:none;color:var(--text);font-size:18px;cursor:pointer;border-radius:50%}
 
@@ -78,6 +92,7 @@ body{position:fixed;top:0;left:0;right:0;bottom:0;padding:env(safe-area-inset-to
 .message .reply-ref .reply-sender{font-weight:500;color:var(--accent);font-size:11.5px}
 .message .reply-ref .reply-text{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:200px}
 .message .msg-text{font-size:14.5px;line-height:1.35;white-space:pre-wrap}
+.message .msg-img{max-width:240px;border-radius:6px;margin-top:4px;cursor:pointer}
 .message .msg-meta{display:flex;align-items:center;justify-content:flex-end;gap:4px;margin-top:1px}
 .message .msg-time{font-size:11px;color:rgba(233,237,237,.55)}
 .message .msg-edited{font-size:10.5px;color:rgba(233,237,237,.45);font-style:italic}
@@ -102,8 +117,8 @@ body{position:fixed;top:0;left:0;right:0;bottom:0;padding:env(safe-area-inset-to
 #chat .reply-bar .reply-close{width:32px;height:32px;display:flex;align-items:center;justify-content:center;background:none;border:none;color:var(--secondary);font-size:18px;cursor:pointer}
 
 #chat .input-bar{background:var(--header);padding:6px 6px;display:flex;align-items:flex-end;gap:4px;flex-shrink:0;z-index:10}
-#chat .input-bar .emoji-btn{width:44px;height:44px;display:flex;align-items:center;justify-content:center;background:none;border:none;color:var(--secondary);font-size:22px;cursor:pointer;flex-shrink:0;border-radius:50%}
-#chat .input-bar .emoji-btn.active{color:var(--accent)}
+#chat .input-bar .icon-btn{width:44px;height:44px;display:flex;align-items:center;justify-content:center;background:none;border:none;color:var(--secondary);font-size:22px;cursor:pointer;flex-shrink:0;border-radius:50%}
+#chat .input-bar .icon-btn.active{color:var(--accent)}
 #chat .input-bar .msg-input{flex:1;background:var(--input);border:none;border-radius:24px;padding:10px 16px;color:var(--text);font-size:15px;outline:none;max-height:100px;overflow-y:auto;resize:none;line-height:1.4;min-height:44px;font-family:inherit}
 #chat .input-bar .msg-input::placeholder{color:var(--secondary)}
 #chat .input-bar .send-btn{width:44px;height:44px;display:flex;align-items:center;justify-content:center;background:var(--accent);border:none;border-radius:50%;color:#fff;font-size:18px;cursor:pointer;flex-shrink:0;transition:transform .15s}
@@ -114,7 +129,13 @@ body{position:fixed;top:0;left:0;right:0;bottom:0;padding:env(safe-area-inset-to
 .emoji-picker .emoji-grid{display:grid;grid-template-columns:repeat(8,1fr);gap:4px}
 .emoji-picker .emoji-item{width:100%;aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:22px;cursor:pointer;border-radius:8px;border:none;background:none;transition:background .15s}
 .emoji-picker .emoji-item:hover{background:var(--hover)}
-.emoji-picker .emoji-item:active{transform:scale(.9)}
+
+/* Photo preview */
+.photo-preview{background:var(--header);padding:8px 12px;display:none;align-items:center;gap:8px;border-top:1px solid rgba(255,255,255,.05);z-index:10;flex-shrink:0}
+.photo-preview.active{display:flex}
+.photo-preview img{width:48px;height:48px;object-fit:cover;border-radius:8px}
+.photo-preview .photo-info{flex:1;font-size:13px;color:var(--secondary)}
+.photo-preview .photo-close{width:28px;height:28px;display:flex;align-items:center;justify-content:center;background:none;border:none;color:var(--secondary);font-size:16px;cursor:pointer}
 
 /* Action Menu */
 .action-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:var(--overlay);z-index:100;justify-content:center;align-items:center}
@@ -124,6 +145,17 @@ body{position:fixed;top:0;left:0;right:0;bottom:0;padding:env(safe-area-inset-to
 .action-menu button:hover{background:var(--hover)}
 .action-menu button i{width:20px;text-align:center;color:var(--secondary)}
 
+/* Settings Panel */
+.settings-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:var(--overlay);z-index:100;justify-content:center;align-items:flex-end}
+.settings-overlay.active{display:flex}
+.settings-panel{background:var(--header);border-radius:16px 16px 0 0;width:100%;max-width:480px;max-height:50vh;overflow-y:auto;padding:16px 0}
+.settings-panel .settings-title{padding:0 20px 12px;font-size:18px;font-weight:500;border-bottom:1px solid rgba(255,255,255,.05)}
+.settings-panel button{width:100%;padding:16px 20px;background:none;border:none;color:var(--text);font-size:15px;text-align:left;cursor:pointer;display:flex;align-items:center;gap:14px;transition:background .15s}
+.settings-panel button:hover{background:var(--hover)}
+.settings-panel button i{width:22px;text-align:center;color:var(--secondary);font-size:18px}
+.settings-panel button.danger{color:var(--danger)}
+.settings-panel button.danger i{color:var(--danger)}
+
 /* Toast */
 .toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:var(--header);color:var(--text);padding:10px 20px;border-radius:20px;font-size:13px;z-index:200;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap}
 .toast.show{opacity:1}
@@ -131,8 +163,17 @@ body{position:fixed;top:0;left:0;right:0;bottom:0;padding:env(safe-area-inset-to
 </head>
 <body>
 <div id="app">
+  <!-- Password Screen -->
+  <div id="password" class="screen active">
+    <div class="pw-icon">🔒</div>
+    <h2>Enter Password</h2>
+    <div class="pw-dots" id="pwDots"></div>
+    <div class="pw-grid" id="pwGrid"></div>
+    <div class="pw-err" id="pwErr"></div>
+  </div>
+
   <!-- Setup Screen -->
-  <div id="setup" class="screen active">
+  <div id="setup" class="screen">
     <div class="logo">💬</div>
     <h2>Welcome to Chat</h2>
     <div class="avatar-grid" id="avatarGrid"></div>
@@ -161,14 +202,15 @@ body{position:fixed;top:0;left:0;right:0;bottom:0;padding:env(safe-area-inset-to
       <button class="back-btn" id="backBtn"><i class="fas fa-arrow-left"></i></button>
       <div class="header-avatar" id="headerAvatar"></div>
       <div class="header-info">
-        <div class="room-name" id="roomName" title="Click to copy code"></div>
+        <div class="room-name" id="roomName"></div>
         <div class="room-status">
           <span class="conn-dot offline" id="connDot"></span>
-          <span id="statusText">Disconnected</span>
+          <span id="statusText">Connecting...</span>
         </div>
+        <div class="user-pills" id="userPills"></div>
       </div>
       <div class="header-actions">
-        <button id="copyCodeBtn" title="Copy room code"><i class="fas fa-copy"></i></button>
+        <button id="settingsBtn" title="Settings"><i class="fas fa-ellipsis-vertical"></i></button>
       </div>
     </div>
     <div class="messages" id="messagesContainer">
@@ -186,13 +228,29 @@ body{position:fixed;top:0;left:0;right:0;bottom:0;padding:env(safe-area-inset-to
       </div>
       <button class="reply-close" id="replyClose"><i class="fas fa-times"></i></button>
     </div>
+    <div class="photo-preview" id="photoPreview">
+      <img id="photoPreviewImg" src="">
+      <div class="photo-info">Image ready to send</div>
+      <button class="photo-close" id="photoClose"><i class="fas fa-times"></i></button>
+    </div>
     <div class="emoji-picker" id="emojiPicker">
       <div class="emoji-grid" id="emojiGrid"></div>
     </div>
     <div class="input-bar">
-      <button class="emoji-btn" id="emojiBtn"><i class="far fa-smile"></i></button>
-      <textarea class="msg-input" id="msgInput" placeholder="Type a message" rows="1"></textarea>
+      <button class="icon-btn" id="emojiBtn"><i class="far fa-smile"></i></button>
+      <button class="icon-btn" id="photoBtn"><i class="fas fa-image"></i></button>
+      <input type="file" id="photoInput" accept="image/*" style="display:none">
+      <input type="text" class="msg-input" id="msgInput" placeholder="Type a message" autocomplete="off">
       <button class="send-btn" id="sendBtn"><i class="fas fa-paper-plane"></i></button>
+    </div>
+  </div>
+
+  <!-- Settings Panel -->
+  <div class="settings-overlay" id="settingsOverlay">
+    <div class="settings-panel" id="settingsPanel">
+      <div class="settings-title">Settings</div>
+      <button id="settingsCopyCode"><i class="fas fa-copy"></i>Copy Room Code</button>
+      <button id="settingsLeave" class="danger"><i class="fas fa-right-from-bracket"></i>Leave Room</button>
     </div>
   </div>
 
@@ -207,20 +265,20 @@ body{position:fixed;top:0;left:0;right:0;bottom:0;padding:env(safe-area-inset-to
 
 <script>
 const SERVER_HOST='chart-app-lenp.onrender.com';
+const APP_PASSWORD='1116';
 const AVATARS=['😀','😂','🥹','😍','🥰','😎','🤩','😏','🤔','🫡','😭','🥺','💀','🤖','👻','🐱','🐶','🦊','🐼','🦁','🐸','🌍','🔥','⭐','💎','🎮','🎵','🏆','🚀','⚡'];
-const EMOJIS=['😀','😂','❤️','👍','🔥','😍','🥰','😎','🤔','😭','🥺','✨','🎉','👋','💯','🙌','😅','🤣','😊','😇','🙂','😉','😌','😍','🥰','😘','😗','😙','😚','😋','😛','😜','🤪','😝','🤑','🤗','🤭','🤫','🤔','🫡','🤐','🤨','😐','😑','😶','😏','😒','🙄','😬','🤥','😌','😔','😪','🤤','😴','😷','🤒','🤕','🤢','🤮','🥵','🥶','🥴','😵','🤯','🤠','🥳','🥸','😎','🤓','🧐','😕','😟','🙁','😮','😯','😲','😳','🥺','😦','😧','😨','😰','😥','😢','😭','😱','😖','😣','😞','😓','😩','😫','🥱','😤','😡','😠','🤬','😈','👿','💀','👻','👽','🤖','💩','😺','😸','😹','😻','😼','😽','🙀','😿','😾','❤️','🧡','💛','💚','💙','💜','🖤','🤍','🤎','💔','❣️','💕','💞','💓','💗','💖','💘','💝','⭐','🌟','💫','🌈','☀️','🌤️','⛅','🌥️','☁️','🌧️','⛈️','🌩️','🌮','🍕','🍔','🍟','🌭','🍿','🧁','🍰','🎂','🍮','🍬','🍭','☕','🍵','🥤','🍺','🍷','🥂','🎮','🎯','🏆','🎪','🎨','🎭','🎤','🎧','🎵','🎶','🎸','🎹','🥁','🎷','🎺','🎻'];
+const EMOJIS=['😀','😂','❤️','👍','🔥','😍','🥰','😎','🤔','😭','🥺','✨','🎉','👋','💯','🙌','😅','🤣','😊','😇','🙂','😉','😌','😍','🥰','😘','😗','😙','😚','😋','😛','😜','🤪','😝','🤑','🤗','🤭','🤫','🤔','🫡','🤐','🤨','😐','😑','😶','😏','😒','🙄','😬','🤥','😌','😔','😪','🤤','😴','😷','🤒','🤕','🤢','🤮','🥵','🥶','🥴','😵','🤯','🤠','🥳','🥸','😎','🤓','🧐','😕','😟','🙁','😮','😯','😲','😳','🥺','😦','😧','😨','😰','😥','😢','😭','😱','😖','😣','😞','😓','😩','😫','🥱','😤','😡','😠','🤬','😈','👿','💀','👻','👽','🤖','💩','❤️','🧡','💛','💚','💙','💜','🖤','🤍','🤎','💔','❣️','💕','💞','💓','💗','💖','💘','💝','⭐','🌟','💫','🌈','☀️','🌤️','⛅','🌥️','☁️','🌧️','🌮','🍕','🍔','🍟','🎮','🎯','🏆','🎪','🎨','🎭','🎤','🎧','🎵','🎶','🎸','🎹','🥁'];
 
-let ws=null,myName='',myAvatar='',currentRoom='',myMessages=new Set();
+let ws=null,myName='',myAvatar='',currentRoom='';
 let reconnectDelay=1000,maxReconnectDelay=30000,reconnectTimer=null;
 let pendingReply=null,typingTimeout=null,typingState=false;
-let allMessages=[],selectedMsg=null;
+let allMessages=[],selectedMsg=null,seenMsgIds=new Set();
+let pendingPhoto=null,onlineUsers=[];
 const seenTyping=new Set();
 
 const $=s=>document.querySelector(s);
 const $$=s=>document.querySelectorAll(s);
-
 function showScreen(id){$$('.screen').forEach(s=>s.classList.remove('active'));$('#'+id).classList.add('active')}
-
 function showToast(text){const t=$('#toast');t.textContent=text;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200)}
 
 // Audio
@@ -228,13 +286,41 @@ const audioCtx=new(window.AudioContext||window.webkitAudioContext)();
 function playSound(type){
   try{audioCtx.resume()}catch(e){}
   const o=audioCtx.createOscillator(),g=audioCtx.createGain();
-  o.connect(g);g.connect(audioCtx.destination);
-  g.gain.value=0.08;
-  if(type==='join'){o.frequency.value=520;o.type='sine';g.gain.exponentialRampToValueAtTime(0.001,audioCtx.currentTime+0.15);o.start();o.stop(audioCtx.currentTime+0.15)}
-  else if(type==='msg'){o.frequency.value=660;o.type='sine';g.gain.exponentialRampToValueAtTime(0.001,audioCtx.currentTime+0.1);o.start();o.stop(audioCtx.currentTime+0.1);setTimeout(()=>{const o2=audioCtx.createOscillator(),g2=audioCtx.createGain();o2.connect(g2);g2.connect(audioCtx.destination);o2.frequency.value=880;o2.type='sine';g2.gain.value=0.08;g2.gain.exponentialRampToValueAtTime(0.001,audioCtx.currentTime+0.12);o2.start();o2.stop(audioCtx.currentTime+0.12)},80)}
+  o.connect(g);g.connect(audioCtx.destination);g.gain.value=0.06;
+  if(type==='join'){o.frequency.value=520;o.type='sine';g.gain.exponentialRampToValueAtTime(0.001,audioCtx.currentTime+0.12);o.start();o.stop(audioCtx.currentTime+0.12)}
+  else if(type==='msg'){o.frequency.value=660;o.type='sine';g.gain.exponentialRampToValueAtTime(0.001,audioCtx.currentTime+0.08);o.start();o.stop(audioCtx.currentTime+0.08);setTimeout(()=>{const o2=audioCtx.createOscillator(),g2=audioCtx.createGain();o2.connect(g2);g2.connect(audioCtx.destination);o2.frequency.value=880;o2.type='sine';g2.gain.value=0.06;g2.gain.exponentialRampToValueAtTime(0.001,audioCtx.currentTime+0.1);o2.start();o2.stop(audioCtx.currentTime+0.1)},70)}
+  else if(type==='err'){o.frequency.value=200;o.type='square';g.gain.value=0.04;g.gain.exponentialRampToValueAtTime(0.001,audioCtx.currentTime+0.2);o.start();o.stop(audioCtx.currentTime+0.2)}
 }
 
-// Avatar grid
+// ========= PASSWORD SCREEN =========
+let pwCode='';
+function initPassword(){
+  const dots=$('#pwDots');
+  dots.innerHTML=[0,1,2,3].map(()=>'<div class="pw-dot"></div>').join('');
+  const keys=[1,2,3,4,5,6,7,8,9,'',0,'DEL'];
+  $('#pwGrid').innerHTML=keys.map(k=>k===''?'<button class="pw-key empty"></button>':
+    `<button class="pw-key${k==='DEL'?' del':''}" data-key="${k}">${k==='DEL'?'<i class="fas fa-delete-left"></i>':k}</button>`).join('');
+  $('#pwGrid').addEventListener('click',e=>{
+    const btn=e.target.closest('.pw-key');
+    if(!btn||btn.classList.contains('empty'))return;
+    const key=btn.dataset.key;
+    if(key==='DEL'){pwCode=pwCode.slice(0,-1)}
+    else{if(pwCode.length<4)pwCode+=key}
+    updateDots();
+    if(pwCode.length===4)checkPassword();
+  });
+}
+function updateDots(){
+  $$('#pwDots .pw-dot').forEach((d,i)=>d.classList.toggle('filled',i<pwCode.length));
+}
+function checkPassword(){
+  if(pwCode===APP_PASSWORD){pwCode='';showScreen('setup')}
+  else{$('#pwErr').textContent='Wrong password!';playSound('err');pwCode='';updateDots();
+    setTimeout(()=>$('#pwErr').textContent='',1500)}
+}
+initPassword();
+
+// ========= SETUP =========
 $('#avatarGrid').innerHTML=AVATARS.map(a=>`<div class="avatar-option" data-emoji="${a}">${a}</div>`).join('');
 $$('.avatar-option').forEach(el=>el.addEventListener('click',()=>{
   $$('.avatar-option').forEach(e=>e.classList.remove('selected'));
@@ -242,24 +328,32 @@ $$('.avatar-option').forEach(el=>el.addEventListener('click',()=>{
 }));
 $('#usernameInput').addEventListener('input',checkSetup);
 function checkSetup(){$('#setupBtn').disabled=!(myAvatar&&$('#usernameInput').value.trim())}
-$('#setupBtn').addEventListener('click',()=>{
-  myName=$('#usernameInput').value.trim();showScreen('room');
-});
+$('#setupBtn').addEventListener('click',()=>{myName=$('#usernameInput').value.trim();showScreen('room')});
 
-// Emoji picker
+// ========= EMOJI PICKER =========
 $('#emojiGrid').innerHTML=EMOJIS.map(e=>`<button class="emoji-item">${e}</button>`).join('');
 $('#emojiBtn').addEventListener('click',()=>{
   const p=$('#emojiPicker');p.classList.toggle('open');$('#emojiBtn').classList.toggle('active');
+  if(p.classList.contains('open'))$('#photoPreview').classList.remove('active');
 });
 $('#emojiGrid').addEventListener('click',e=>{
   if(e.target.classList.contains('emoji-item')){
-    const inp=$('#msgInput'),v=inp.value,ss=inp.selectionStart,se=inp.selectionEnd;
-    inp.value=v.slice(0,ss)+e.target.textContent+v.slice(se);inp.focus();
-    inp.selectionStart=inp.selectionEnd=ss+e.target.textContent.length;
+    const inp=$('#msgInput');
+    inp.value+=e.target.textContent;inp.focus();
   }
 });
 
-// Room
+// ========= PHOTO =========
+$('#photoBtn').addEventListener('click',()=>$('#photoInput').click());
+$('#photoInput').addEventListener('change',e=>{
+  const file=e.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=()=>{pendingPhoto=reader.result;$('#photoPreviewImg').src=reader.result;$('#photoPreview').classList.add('active');$('#emojiPicker').classList.remove('open');$('#emojiBtn').classList.remove('active')};
+  reader.readAsDataURL(file);e.target.value='';
+});
+$('#photoClose').addEventListener('click',()=>{pendingPhoto=null;$('#photoPreview').classList.remove('active')});
+
+// ========= ROOM =========
 $('#createRoomBtn').addEventListener('click',()=>{
   const code=Math.random().toString(36).substring(2,8).toUpperCase();
   $('#roomCodeInput').value=code;joinRoom(code);
@@ -274,11 +368,10 @@ function joinRoom(code){
   currentRoom=code;connectWS();
   $('#roomName').textContent='Room: '+code;
   $('#headerAvatar').textContent=myAvatar;
-  showScreen('chat');
-  $('#msgInput').focus();
+  showScreen('chat');$('#msgInput').focus();
 }
 
-// WS
+// ========= WEBSOCKET =========
 function connectWS(){
   if(ws){try{ws.close()}catch(e){}ws=null}
   try{
@@ -299,25 +392,28 @@ function connectWS(){
 function setConnStatus(online){
   const dot=$('#connDot'),txt=$('#statusText');
   dot.className='conn-dot '+(online?'online':'offline');
-  txt.textContent=online?($('#onlineCount')?.textContent||'Online'):'Reconnecting...';
+  txt.textContent=online?'Online':'Reconnecting...';
 }
 
 function handleMessage(data){
   switch(data.type){
     case'join_success':setConnStatus(true);addSystem('You joined '+data.room);playSound('join');break;
-    case'error':showToast(data.message);break;
+    case'error':showToast(data.message);playSound('err');break;
     case'message':onNewMessage(data.message);break;
     case'edit_update':onEditUpdate(data);break;
     case'delete_update':onDeleteUpdate(data);break;
     case'system':addSystem(data.text);playSound('join');break;
     case'typing':onTyping(data);break;
     case'online_count':updateOnline(data);break;
+    case'cleanup':cleanupOldMessages();break;
     case'pong':break;
     case'left_room':showScreen('room');showToast('Left room');break;
   }
 }
 
 function onNewMessage(msg){
+  if(seenMsgIds.has(msg.id))return;
+  seenMsgIds.add(msg.id);
   if(msg.sender===myName)myMessages.add(msg.id);
   allMessages.push(msg);
   renderMessage(msg);
@@ -355,11 +451,27 @@ function onTyping(data){
 }
 
 function updateOnline(data){
+  onlineUsers=data.users||[];
   const h=$('#statusText');h.textContent=data.count+' online';
-  const dot=$('#connDot');if(dot.classList.contains('offline')==false)h.prepend(dot,' ');
+  const pills=$('#userPills');
+  pills.innerHTML=onlineUsers.filter(u=>u.name!==myName).map(u=>
+    `<span class="user-pill"><span class="pill-avatar">${u.avatar||'👤'}</span><span class="pill-dot"></span>${esc(u.name)}</span>`
+  ).join('');
 }
 
-// Render
+function cleanupOldMessages(){
+  const now=Date.now();
+  allMessages=allMessages.filter(m=>now-(m.timestamp||0)<180000);
+  const list=$('#messagesList');
+  [...list.children].forEach(el=>{
+    if(el.classList.contains('message')&&el.id){
+      const id=el.id.replace('msg-','');
+      if(!allMessages.find(m=>m.id===id)){el.remove();seenMsgIds.delete(id)}
+    }
+  });
+}
+
+// ========= RENDER =========
 function renderMessage(msg){
   const list=$('#messagesList');
   const prev=allMessages[allMessages.length-2];
@@ -374,17 +486,20 @@ function renderMessage(msg){
   let replyHtml='';
   if(msg.replyTo){
     const rm=allMessages.find(m=>m.id===msg.replyTo);
-    if(rm)replyHtml=`<div class="reply-ref" data-id="${msg.replyTo}"><span class="reply-sender">${rm.sender}</span><span class="reply-text">${esc(rm.text)}</span></div>`;
+    if(rm)replyHtml=`<div class="reply-ref" data-id="${msg.replyTo}"><span class="reply-sender">${esc(rm.sender)}</span><span class="reply-text">${esc(rm.text)}</span></div>`;
   }
+
+  let photoHtml='';
+  if(msg.photo){photoHtml=`<img class="msg-img" src="${msg.photo}" onclick="window.open(this.src)">`}
 
   const tickHtml=isMine?'<span class="ticks'+(msg.edited?'':' sent-tick')+'">✓✓</span>':'';
   const editedHtml=msg.edited?'<span class="msg-edited">edited</span>':'';
   const time=msg.fullTime||formatTime(msg.timestamp);
 
   if(isMine){
-    div.innerHTML=`<div class="bubble">${replyHtml}<span class="msg-text">${esc(msg.text)}</span><div class="msg-meta">${editedHtml}<span class="msg-time">${time}</span>${tickHtml}</div></div>`;
+    div.innerHTML=`<div class="bubble">${replyHtml}<span class="msg-text">${esc(msg.text)}</span>${photoHtml}<div class="msg-meta">${editedHtml}<span class="msg-time">${time}</span>${tickHtml}</div></div>`;
   }else{
-    div.innerHTML=`<div class="msg-avatar">${msg.avatar||'👤'}</div><div class="bubble"><div class="sender">${esc(msg.sender)}</div>${replyHtml}<span class="msg-text">${esc(msg.text)}</span><div class="msg-meta">${editedHtml}<span class="msg-time">${time}</span></div></div>`;
+    div.innerHTML=`<div class="msg-avatar">${msg.avatar||'👤'}</div><div class="bubble"><div class="sender">${esc(msg.sender)}</div>${replyHtml}<span class="msg-text">${esc(msg.text)}</span>${photoHtml}<div class="msg-meta">${editedHtml}<span class="msg-time">${time}</span></div></div>`;
   }
 
   div.addEventListener('click',e=>{
@@ -398,16 +513,13 @@ function renderMessage(msg){
     if(dx>60&&Math.abs(e.changedTouches[0].clientY-touchStart.y)<50){startReply(msg);e.preventDefault()}
   });
 
-  div.addEventListener('contextmenu',e=>{
-    e.preventDefault();showActionMenu(msg,div);
-  });
-
-  div.addEventListener('dblclick',e=>{e.preventDefault();showActionMenu(msg,div)});
+  div.addEventListener('contextmenu',e=>{e.preventDefault();showActionMenu(msg)});
+  div.addEventListener('dblclick',e=>{e.preventDefault();showActionMenu(msg)});
 
   list.appendChild(div);
 }
 
-function showActionMenu(msg,el){
+function showActionMenu(msg){
   const isMine=msg.sender===myName;
   const menu=$('#actionMenu');menu.innerHTML='';
   const items=[];
@@ -420,32 +532,24 @@ function hideActionMenu(){$('#actionOverlay').classList.remove('active')}
 $('#actionOverlay').addEventListener('click',e=>{if(e.target===$('#actionOverlay'))hideActionMenu()});
 
 function startReply(msg){
-  pendingReply=msg;
-  $('#rpName').textContent=msg.sender;
-  $('#rpText').textContent=msg.text;
-  $('#replyBar').classList.add('active');
-  $('#msgInput').focus();
+  pendingReply=msg;$('#rpName').textContent=msg.sender;$('#rpText').textContent=msg.text;
+  $('#replyBar').classList.add('active');$('#msgInput').focus();
 }
 $('#replyClose').addEventListener('click',()=>{pendingReply=null;$('#replyBar').classList.remove('active')});
 
-function startEdit(msg){
-  const inp=$('#msgInput');inp.value=msg.text;inp.focus();
-  selectedMsg=msg;
-  inp.dataset.editId=msg.id;
-}
+function startEdit(msg){const inp=$('#msgInput');inp.value=msg.text;inp.focus();selectedMsg=msg;inp.dataset.editId=msg.id}
 function doDelete(msg){
   if(!confirm('Delete this message?'))return;
-  ws.send(JSON.stringify({type:'delete_message',id:msg.id}));
-  myMessages.delete(msg.id);
+  ws.send(JSON.stringify({type:'delete_message',id:msg.id}));myMessages.delete(msg.id);
 }
 
-// Send
+// ========= SEND =========
+let sending=false;
 $('#sendBtn').addEventListener('click',sendMessage);
 $('#msgInput').addEventListener('keydown',e=>{
   if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage()}
 });
 $('#msgInput').addEventListener('input',()=>{
-  const inp=$('#msgInput');inp.style.height='auto';inp.style.height=Math.min(inp.scrollHeight,100)+'px';
   if(!ws||ws.readyState!==1)return;
   if(!typingState){typingState=true;ws.send(JSON.stringify({type:'typing',isTyping:true}))}
   clearTimeout(typingTimeout);
@@ -453,7 +557,11 @@ $('#msgInput').addEventListener('input',()=>{
 });
 
 function sendMessage(){
-  const inp=$('#msgInput');const text=inp.value.trim();if(!text||!ws||ws.readyState!==1)return;
+  if(sending)return;
+  const inp=$('#msgInput');const text=inp.value.trim();
+  if((!text&&!pendingPhoto)||!ws||ws.readyState!==1)return;
+  sending=true;setTimeout(()=>sending=false,300);
+
   const editId=inp.dataset.editId;
   if(editId){
     ws.send(JSON.stringify({type:'edit_message',id:editId,newText:text}));
@@ -463,29 +571,51 @@ function sendMessage(){
     const id=myName+'-'+Date.now()+'-'+Math.random().toString(36).slice(2,6);
     const ts=Date.now();
     const replyTo=pendingReply?pendingReply.id:null;
-    ws.send(JSON.stringify({type:'message',text,id,timestamp:ts,fullTime:formatTime(ts),replyTo}));
-    onNewMessage({id,sender:myName,avatar:myAvatar,text,timestamp:ts,fullTime:formatTime(ts),replyTo,edited:false});
+    const photo=pendingPhoto||null;
+    ws.send(JSON.stringify({type:'message',text:text||'📷 Photo',id,timestamp:ts,fullTime:formatTime(ts),replyTo,photo}));
+    seenMsgIds.add(id);
   }
-  inp.value='';inp.style.height='auto';
+  inp.value='';
+  pendingPhoto=null;$('#photoPreview').classList.remove('active');
   if(pendingReply){pendingReply=null;$('#replyBar').classList.remove('active')}
   typingState=false;clearTimeout(typingTimeout);
   try{ws.send(JSON.stringify({type:'typing',isTyping:false}))}catch(e){}
 }
 
-// Back / Leave
+// ========= SETTINGS =========
+$('#settingsBtn').addEventListener('click',()=>$('#settingsOverlay').classList.add('active'));
+$('#settingsOverlay').addEventListener('click',e=>{if(e.target===$('#settingsOverlay'))$('#settingsOverlay').classList.remove('active')});
+$('#settingsCopyCode').addEventListener('click',()=>{navigator.clipboard?.writeText(currentRoom);showToast('Code copied!');$('#settingsOverlay').classList.remove('active')});
+$('#settingsLeave').addEventListener('click',()=>{
+  if(!confirm('Leave room?'))return;
+  try{ws.send(JSON.stringify({type:'leave_room'}))}catch(e){}
+  resetChat();$('#settingsOverlay').classList.remove('active');
+});
+
+// ========= BACK / LEAVE =========
 $('#backBtn').addEventListener('click',()=>{
   if(!confirm('Leave room?'))return;
   try{ws.send(JSON.stringify({type:'leave_room'}))}catch(e){}
-  myMessages.clear();allMessages=[];$('#messagesList').innerHTML='';
+  resetChat();
+});
+function resetChat(){
+  seenMsgIds.clear();allMessages=[];$('#messagesList').innerHTML='';
   $('#typingIndicator').style.display='none';seenTyping.clear();
   pendingReply=null;$('#replyBar').classList.remove('active');
+  pendingPhoto=null;$('#photoPreview').classList.remove('active');
   $('#emojiPicker').classList.remove('open');$('#emojiBtn').classList.remove('active');
   showScreen('room');
-});
+}
 
-// Copy code
-$('#copyCodeBtn').addEventListener('click',()=>{navigator.clipboard?.writeText(currentRoom);showToast('Code copied!')});
-$('#roomName').addEventListener('click',()=>{navigator.clipboard?.writeText(currentRoom);showToast('Code copied!')});
+// ========= AUTO CLEANUP (client side) =========
+setInterval(()=>{
+  const now=Date.now();
+  allMessages.filter(m=>now-(m.timestamp||0)>=180000).forEach(m=>{
+    seenMsgIds.delete(m.id);myMessages.delete(m.id);
+    const el=document.getElementById('msg-'+m.id);if(el)el.remove();
+  });
+  allMessages=allMessages.filter(m=>now-(m.timestamp||0)<180000);
+},30000);
 
 // Ping
 setInterval(()=>{if(ws&&ws.readyState===1)ws.send(JSON.stringify({type:'ping'}))},25000);
@@ -498,7 +628,7 @@ function addSystem(text){
   const list=$('#messagesList');const d=document.createElement('div');d.className='message system-msg';
   d.innerHTML=`<div class="bubble"><span class="msg-text">${esc(text)}</span></div>`;list.appendChild(d);scrollBottom();
 }
-function clearTyping(name){/* handled by timeout in onTyping */}
+function clearTyping(name){}
 </script>
 </body>
 </html>
