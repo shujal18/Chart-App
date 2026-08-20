@@ -4,13 +4,19 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node server.js",
+    "cap:sync": "npx cap sync android",
+    "cap:open": "npx cap open android",
+    "build:apk": "cd android && ./gradlew assembleDebug"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
+    "@capacitor/android": "^8.5.0",
+    "@capacitor/cli": "^7.6.8",
+    "@capacitor/core": "^8.5.0",
     "express": "^5.2.1",
     "ws": "^8.18.3"
   }
