@@ -574,7 +574,6 @@ function sendMessage(){
     const replyTo=pendingReply?pendingReply.id:null;
     const photo=pendingPhoto||null;
     ws.send(JSON.stringify({type:'message',text:text||'📷 Photo',id,timestamp:ts,fullTime:formatTime(ts),replyTo,photo}));
-    seenMsgIds.add(id);
     onNewMessage({id,sender:myName,avatar:myAvatar,text:text||'📷 Photo',timestamp:ts,fullTime:formatTime(ts),replyTo,photo,edited:false});
   }
   inp.value='';
