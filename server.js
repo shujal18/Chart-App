@@ -4,123 +4,129 @@ const WebSocket = require("ws");
 
 const server = http.createServer((req, res) => {
     fs.readFile("./index.html", (err, content) => {
-        if (err) {
-            res.writeHead(500);
-            return res.end("Error loading index.html");
-        }
+        if (err) { res.writeHead(500); return res.end("Error"); }
         res.writeHead(200, { "Content-Type": "text/html" });
         res.end(content);
     });
 });
 
-// Set a max payload limit to prevent the server from crashing on massive files
-const wss = new WebSocket.Server({ 
-    server,
-    maxPayload: 10 * 1024 * 1024 // 10MB Limit
-});
+const wss = new WebSocket.Server({ server, maxPayload: 5 * 1024 * 1024 });
 
-const rooms = {}; 
-let latestPublicCode = ""; 
-const MAX_PER_ROOM = 6; 
-const MAX_HISTORY = 50; // Keep only last 50 messages to save RAM
+const rooms = {};
+let latestPublicCode = "";
+const MAX_PER_ROOM = 6;
+const MAX_HISTORY = 50;
+const INACTIVE_TIMEOUT = 5 * 60 * 1000;
 
-// --- HEARTBEAT LOGIC TO PREVENT RENDER TIMEOUT ---
-function heartbeat() {
-  this.isAlive = true;
-}
+function heartbeat() { this.isAlive = true; }
 
-const interval = setInterval(function ping() {
-  wss.clients.forEach(function each(ws) {
-    if (ws.isAlive === false) return ws.terminate(); // Kill dead connections
-    ws.isAlive = false;
-    ws.ping(); // Standard WebSocket ping
-  });
-}, 30000); // 30 seconds
+const heartbeatInterval = setInterval(() => {
+    wss.clients.forEach(ws => {
+        if (!ws.isAlive) return ws.terminate();
+        ws.isAlive = false;
+        ws.ping();
+    });
+}, 30000);
+
+const cleanupInterval = setInterval(() => {
+    const now = Date.now();
+    for (const code in rooms) {
+        if (rooms[code].users.size === 0 && now - rooms[code].lastActivity > INACTIVE_TIMEOUT) {
+            delete rooms[code];
+            console.log(`Cleaned up inactive room: ${code}`);
+        }
+    }
+}, 60000);
 
 wss.on("connection", (ws) => {
     ws.isAlive = true;
-    ws.on('pong', heartbeat); // Reset alive status when client responds to ping
+    ws.on("pong", heartbeat);
 
     ws.on("message", (msg) => {
         try {
             const data = JSON.parse(msg);
-            
-            // Handle Heartbeat from client (prevents messages getting "stuck")
-            if (data.type === "ping") {
-                ws.send(JSON.stringify({ type: "pong" }));
-                return;
-            }
 
+            if (data.type === "ping") { ws.send(JSON.stringify({ type: "pong" })); return; }
             if (data.type === "generate_code") { latestPublicCode = data.code; }
 
             if (data.type === "join") {
                 const val = data.room.toUpperCase();
                 const isSecret = (val === "AALU00" || val === "AALUOO_ROOM");
-                
                 let targetRoom = null;
                 if (isSecret) targetRoom = "AALUOO_ROOM";
                 else if (val === latestPublicCode || rooms[val]) targetRoom = val;
 
                 if (targetRoom) {
-                    if (!rooms[targetRoom]) rooms[targetRoom] = { users: new Set(), messages: [] };
+                    if (!rooms[targetRoom]) rooms[targetRoom] = { users: new Set(), messages: [], lastActivity: Date.now() };
                     if (rooms[targetRoom].users.size >= MAX_PER_ROOM) {
-                        ws.send(JSON.stringify({ type: "error", message: "ROOM FULL!" }));
+                        ws.send(JSON.stringify({ type: "error", message: "Room is full!" }));
                         return;
                     }
-                    ws.room = targetRoom; ws.username = data.username; ws.avatar = data.avatar;
+                    ws.room = targetRoom;
+                    ws.username = data.username;
+                    ws.avatar = data.avatar;
                     rooms[ws.room].users.add(ws);
+                    rooms[ws.room].lastActivity = Date.now();
+
                     ws.send(JSON.stringify({ type: "join_success", room: ws.room }));
-                    
                     rooms[ws.room].messages.forEach(m => ws.send(JSON.stringify({ type: "message", message: m })));
+
                     broadcast(ws.room, { type: "system", text: `${ws.avatar} ${ws.username} joined!` });
+                    broadcastOnline(ws.room);
                 } else {
-                    ws.send(JSON.stringify({ type: "error", message: "INVALID CODE!" }));
+                    ws.send(JSON.stringify({ type: "error", message: "Invalid room code!" }));
                 }
             }
 
             if (data.type === "message" && ws.room) {
-                const msgPayload = { 
+                const msgPayload = {
                     id: data.id || "msg-" + Date.now(),
-                    sender: ws.username, 
-                    avatar: ws.avatar, 
+                    sender: ws.username,
+                    avatar: ws.avatar,
                     text: data.text,
-                    file: data.file, 
-                    fileName: data.fileName,
                     timestamp: data.timestamp,
                     fullTime: data.fullTime,
                     replyTo: data.replyTo,
-                    disappear: data.disappear,
                     edited: false
                 };
-                
                 rooms[ws.room].messages.push(msgPayload);
-                if (rooms[ws.room].messages.length > MAX_HISTORY) {
-                    rooms[ws.room].messages.shift();
-                }
-
+                rooms[ws.room].lastActivity = Date.now();
+                if (rooms[ws.room].messages.length > MAX_HISTORY) rooms[ws.room].messages.shift();
                 broadcast(ws.room, { type: "message", message: msgPayload });
             }
 
             if (data.type === "edit_message" && ws.room) {
-                const roomMsgs = rooms[ws.room].messages;
-                const msgObj = roomMsgs.find(m => m.id === data.id);
+                const msgObj = rooms[ws.room].messages.find(m => m.id === data.id);
                 if (msgObj && msgObj.sender === ws.username) {
                     msgObj.text = data.newText;
                     msgObj.edited = true;
+                    rooms[ws.room].lastActivity = Date.now();
                     broadcast(ws.room, { type: "edit_update", id: data.id, newText: data.newText });
                 }
             }
 
-            if (["typing", "offer", "answer", "candidate", "call_req", "call_acc", "hangup", "self_destruct"].includes(data.type)) {
+            if (data.type === "delete_message" && ws.room) {
+                rooms[ws.room].messages = rooms[ws.room].messages.filter(m => !(m.id === data.id && m.sender === ws.username));
+                rooms[ws.room].lastActivity = Date.now();
+                broadcast(ws.room, { type: "delete_update", id: data.id });
+            }
+
+            if (data.type === "leave_room" && ws.room) {
+                const room = ws.room;
+                ws.room = null;
+                rooms[room].users.delete(ws);
+                broadcast(room, { type: "system", text: `${ws.username} left.` });
+                if (rooms[room].users.size === 0) delete rooms[room];
+                else broadcastOnline(room);
+                ws.send(JSON.stringify({ type: "left_room" }));
+            }
+
+            if (["typing"].includes(data.type) && ws.room) {
+                rooms[ws.room].lastActivity = Date.now();
                 broadcast(ws.room, { ...data, sender: ws.username, avatar: ws.avatar });
-                
-                if(data.type === "self_destruct" && ws.room) {
-                    rooms[ws.room].messages = [];
-                    broadcast(ws.room, { type: "wipe_chat" });
-                }
             }
         } catch (e) {
-            console.error("Error processing message:", e);
+            console.error("Error:", e);
         }
     });
 
@@ -128,26 +134,28 @@ wss.on("connection", (ws) => {
         if (ws.room && rooms[ws.room]) {
             rooms[ws.room].users.delete(ws);
             broadcast(ws.room, { type: "system", text: `${ws.username} left.` });
-            
-            if (rooms[ws.room].users.size === 0) {
-                delete rooms[ws.room];
-            }
+            if (rooms[ws.room].users.size === 0) delete rooms[ws.room];
+            else broadcastOnline(ws.room);
         }
     });
 });
 
-wss.on('close', () => {
-  clearInterval(interval);
-});
+wss.on("close", () => { clearInterval(heartbeatInterval); clearInterval(cleanupInterval); });
 
 function broadcast(room, data) {
-    if (rooms[room]) {
-        const out = JSON.stringify(data);
-        rooms[room].users.forEach(c => { 
-            if (c.readyState === WebSocket.OPEN) c.send(out); 
-        });
-    }
+    if (!rooms[room]) return;
+    const out = JSON.stringify(data);
+    rooms[room].users.forEach(c => { if (c.readyState === WebSocket.OPEN) c.send(out); });
+}
+
+function broadcastOnline(room) {
+    if (!rooms[room]) return;
+    const count = rooms[room].users.size;
+    const users = [...rooms[room].users].map(u => ({ name: u.username, avatar: u.avatar }));
+    rooms[room].users.forEach(c => {
+        if (c.readyState === WebSocket.OPEN) c.send(JSON.stringify({ type: "online_count", count, users }));
+    });
 }
 
 const PORT = process.env.PORT || 8080;
-server.listen(PORT, '0.0.0.0', () => console.log(`Jungle Server on ${PORT}`));
+server.listen(PORT, "0.0.0.0", () => console.log(`Server running on ${PORT}`));
