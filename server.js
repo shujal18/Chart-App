@@ -102,7 +102,10 @@ wss.on("connection", (ws) => {
                         rooms[ws.room].messages.filter(m => now - (m.timestamp || 0) < MSG_TTL)
                             .forEach(m => ws.send(JSON.stringify({ type: "message", message: m })));
 
-                        broadcast(ws.room, { type: "system", text: `${ws.avatar} ${ws.username} joined!` });
+                        const isRejoin = [...rooms[ws.room].users].some(u =>
+                            u !== ws && !u.silent &&
+                            (u.username || "").trim().toLowerCase() === (ws.username || "").trim().toLowerCase());
+                        if (!isRejoin) broadcast(ws.room, { type: "system", text: `${ws.avatar} ${ws.username} joined!` });
                         broadcastOnline(ws.room);
                     }
                 } else {
@@ -216,7 +219,10 @@ wss.on("connection", (ws) => {
             if (ws.silent) {
                 if (rooms[room].users.size === 0) delete rooms[room];
             } else {
-                broadcast(room, { type: "system", text: `${ws.username} left.` });
+                const stillConnected = [...rooms[room].users].some(u =>
+                    !u.silent &&
+                    (u.username || "").trim().toLowerCase() === (ws.username || "").trim().toLowerCase());
+                if (!stillConnected) broadcast(room, { type: "system", text: `${ws.username} left.` });
                 if (rooms[room].users.size === 0) delete rooms[room];
                 else broadcastOnline(room);
             }

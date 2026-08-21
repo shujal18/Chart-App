@@ -402,7 +402,11 @@ function restoreSession(s){
   wsConnected=false;onlineUsers=[];
   renderHeader();showScreen('chat');connectWS();
 }
-initPassword();
+(function(){
+  const s=getSession();
+  if(s&&s.n&&s.a&&s.r){restoreSession(s);return}
+  initPassword();
+})();
 
 // ========= SETUP =========
 $('#avatarGrid').innerHTML=AVATARS.map(a=>`<div class="avatar-option" data-emoji="${a}">${a}</div>`).join('');
@@ -1069,7 +1073,7 @@ setInterval(()=>{
   try{fh=AndroidNative.consumeOpenedFromHead()}catch(e){}
   if(fh){
     const s=getSession();
-    if(s&&s.n&&s.a&&s.r)restoreSession(s);
+    if(s&&s.n&&s.a&&s.r&&!$('#chat').classList.contains('active'))restoreSession(s);
   }
 })();
 
