@@ -402,11 +402,7 @@ function restoreSession(s){
   wsConnected=false;onlineUsers=[];
   renderHeader();showScreen('chat');connectWS();
 }
-(function(){
-  const s=getSession();
-  if(s&&s.n&&s.a&&s.r){restoreSession(s);return}
-  initPassword();
-})();
+initPassword();
 
 // ========= SETUP =========
 $('#avatarGrid').innerHTML=AVATARS.map(a=>`<div class="avatar-option" data-emoji="${a}">${a}</div>`).join('');
@@ -1066,15 +1062,12 @@ setInterval(()=>{
   allMessages=allMessages.filter(m=>now-(m.timestamp||0)<180000);
 },30000);
 
-// ========= OPENED FROM CHAT HEAD: SKIP PASSWORD =========
+// ========= STARTUP: password on cold open, resume silently when minimized =========
 (function(){
-  if(!window.AndroidNative)return;
-  let fh=false;
-  try{fh=AndroidNative.consumeOpenedFromHead()}catch(e){}
-  if(fh){
-    const s=getSession();
-    if(s&&s.n&&s.a&&s.r&&!$('#chat').classList.contains('active'))restoreSession(s);
-  }
+  let cold=true;
+  try{if(window.AndroidNative)cold=AndroidNative.consumeColdStart()}catch(e){}
+  const s=getSession();
+  if(!cold&&s&&s.n&&s.a&&s.r)restoreSession(s);
 })();
 
 // Ping
