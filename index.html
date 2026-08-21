@@ -577,7 +577,7 @@ function onNewMessage(msg){
   const mine=msg.sender===myName;
   if(!nearBottom()&&!mine){unreadCount++;updateFabBadge()}
   else scrollBottom();
-  if(!mine){playSound('msg');if(isSecretRoom())vibrateDevice([0,220])}
+  if(!mine&&!isSecretRoom())playSound('msg');
   clearTyping(msg.sender);
   if(document.visibilityState==='hidden'&&!mine){headUnread++;updateChatHead()}
 }
