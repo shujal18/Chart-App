@@ -18,7 +18,7 @@ const MAX_PER_ROOM = 6;
 const MAX_HISTORY = 50;
 const MSG_TTL = 3 * 60 * 1000;
 const INACTIVE_TIMEOUT = 5 * 60 * 1000;
-const SECRET_ROOM_MEMBERS = ["subu", "shuju"];
+const SECRET_ROOM_MEMBERS = ["tom", "jerry"];
 
 function heartbeat() { this.isAlive = true; }
 
