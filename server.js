@@ -122,6 +122,12 @@ wss.on("connection", (ws) => {
                 broadcast(ws.room, { type: "message", message: msgPayload });
             }
 
+            if (data.type === "clear_messages" && ws.room === "AALUOO_ROOM") {
+                rooms[ws.room].messages = [];
+                rooms[ws.room].lastActivity = Date.now();
+                broadcast(ws.room, { type: "messages_cleared" });
+            }
+
             if (data.type === "reaction" && ws.room) {
                 const msgObj = rooms[ws.room].messages.find(m => m.id === data.id);
                 if (msgObj) {

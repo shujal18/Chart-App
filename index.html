@@ -299,6 +299,8 @@ body:not(.light){--chip-bg:rgba(17,27,33,.85);--chip-fg:var(--secondary);--time-
   <div class="settings-overlay" id="settingsOverlay">
     <div class="settings-panel" id="settingsPanel">
       <div class="settings-title">Settings</div>
+      <button id="settingsClear" style="display:none"><i class="fas fa-broom"></i>Clear All Messages</button>
+      <button id="settingsChatHead" style="display:none"><i class="fas fa-commenting"></i><span id="chatHeadLabel">Chat Head: Off</span></button>
       <button id="settingsShare"><i class="fas fa-share-nodes"></i>Share Room</button>
       <button id="settingsCopyCode"><i class="fas fa-copy"></i>Copy Room Code</button>
       <button id="settingsTheme"><i class="fas fa-sun"></i><span id="themeLabel">Light Mode</span></button>
@@ -321,7 +323,8 @@ const APP_PASSWORD='1116';
 const AVATARS=['😀','😂','🥹','😍','🥰','😎','🤩','😏','🤔','🫡','😭','🥺','💀','🤖','👻','🐱','🐶','🦊','🐼','🦁','🐸','🌍','🔥','⭐','💎','🎮','🎵','🏆','🚀','⚡'];
 const EMOJIS=['😀','😂','❤️','👍','🔥','😍','🥰','😎','🤔','😭','🥺','✨','🎉','👋','💯','🙌','😅','🤣','😊','😇','🙂','😉','😌','😍','🥰','😘','😗','😙','😚','😋','😛','😜','🤪','😝','🤑','🤗','🤭','🤫','🤔','🫡','🤐','🤨','😐','😑','😶','😏','😒','🙄','😬','🤥','😌','😔','😪','🤤','😴','😷','🤒','🤕','🤢','🤮','🥵','🥶','🥴','😵','🤯','🤠','🥳','🥸','😎','🤓','🧐','😕','😟','🙁','😮','😯','😲','😳','🥺','😦','😧','😨','😰','😥','😢','😭','😱','😖','😣','😞','😓','😩','😫','🥱','😤','😡','😠','🤬','😈','👿','💀','👻','👽','🤖','💩','❤️','🧡','💛','💚','💙','💜','🖤','🤍','🤎','💔','❣️','💕','💞','💓','💗','💖','💘','💝','⭐','🌟','💫','🌈','☀️','🌤️','⛅','🌥️','☁️','🌧️','🌮','🍕','🍔','🍟','🎮','🎯','🏆','🎪','🎨','🎭','🎤','🎧','🎵','🎶','🎸','🎹','🥁'];
 
-let ws=null,myName='',myAvatar='',currentRoom='',isCreating=false;
+let ws=null,myName='',myAvatar='',currentRoom='',isCreating=false,joinedRoom='';
+const isSecretRoom=()=>currentRoom.toUpperCase()==='AALU00'||joinedRoom==='AALUOO_ROOM';
 let reconnectDelay=1000,maxReconnectDelay=30000,reconnectTimer=null;
 let pendingReply=null,typingTimeout=null,typingState=false;
 let allMessages=[],selectedMsg=null,seenMsgIds=new Set(),myMessages=new Set();
@@ -488,9 +491,10 @@ function renderHeader(){
 
 function handleMessage(data){
   switch(data.type){
-    case'join_success':setConnStatus(true);addSystem('You joined '+data.room);playSound('join');break;
+    case'join_success':joinedRoom=data.room;setConnStatus(true);addSystem('You joined '+data.room);playSound('join');break;
     case'error':showToast(data.message);playSound('err');break;
     case'message':onNewMessage(data.message);break;
+    case'messages_cleared':onMessagesCleared();break;
     case'edit_update':onEditUpdate(data);break;
     case'delete_update':onDeleteUpdate(data);break;
     case'reaction_update':onReactionUpdate(data);break;
@@ -514,6 +518,30 @@ function onNewMessage(msg){
   scrollBottom();
   if(msg.sender!==myName)playSound('msg');
   clearTyping(msg.sender);
+  if(document.visibilityState==='hidden'&&msg.sender!==myName){headUnread++;updateChatHead()}
+}
+
+// ========= SECRET ROOM: CLEAR ALL + CHAT HEAD =========
+let headUnread=0;
+function onMessagesCleared(){
+  allMessages=[];seenMsgIds.clear();myMessages.clear();seenSet.clear();pendingSeen.clear();
+  $('#messagesList').innerHTML='';
+  addSystem('All messages were cleared');
+}
+document.addEventListener('visibilitychange',()=>{
+  if(document.visibilityState==='visible'){
+    headUnread=0;
+    try{if(window.AndroidNative)AndroidNative.hideChatHead()}catch(e){}
+  }else updateChatHead();
+});
+function updateChatHead(){
+  if(!isSecretRoom()||!chatHeadEnabled||!window.AndroidNative)return;
+  const others=onlineUsers.filter(u=>u.name!==myName);
+  try{
+    if(document.visibilityState==='hidden'&&others.length&&AndroidNative.canDrawOverlay()){
+      AndroidNative.showChatHead(others[0].avatar||'👤',others[0].name,headUnread);
+    }
+  }catch(e){}
 }
 
 // ========= SEEN RECEIPTS =========
@@ -806,7 +834,35 @@ function sendMessage(){
 }
 
 // ========= SETTINGS =========
-$('#settingsBtn').addEventListener('click',()=>$('#settingsOverlay').classList.add('active'));
+$('#settingsBtn').addEventListener('click',()=>{
+  const secret=isSecretRoom();
+  $('#settingsClear').style.display=secret?'flex':'none';
+  $('#settingsChatHead').style.display=secret?'flex':'none';
+  $('#settingsOverlay').classList.add('active');
+});
+$('#settingsClear').addEventListener('click',()=>{
+  if(!confirm('Delete ALL messages for everyone?'))return;
+  try{ws.send(JSON.stringify({type:'clear_messages'}))}catch(e){}
+  $('#settingsOverlay').classList.remove('active');
+});
+let chatHeadEnabled=false;
+try{chatHeadEnabled=localStorage.getItem('chatHeadEnabled')==='1'}catch(e){}
+function syncChatHeadLabel(){$('#chatHeadLabel').textContent='Chat Head: '+(chatHeadEnabled?'On':'Off')}
+syncChatHeadLabel();
+$('#settingsChatHead').addEventListener('click',()=>{
+  if(!window.AndroidNative){showToast('Works in APK only');return}
+  if(!chatHeadEnabled){
+    let allowed=false;
+    try{allowed=AndroidNative.canDrawOverlay()}catch(e){}
+    if(!allowed){try{AndroidNative.openOverlaySettings()}catch(e){}showToast('Allow "Display over other apps", then turn on again');return}
+    chatHeadEnabled=true;
+  }else{
+    chatHeadEnabled=false;
+    try{AndroidNative.hideChatHead()}catch(e){}
+  }
+  try{localStorage.setItem('chatHeadEnabled',chatHeadEnabled?'1':'0')}catch(e){}
+  syncChatHeadLabel();
+});
 $('#settingsOverlay').addEventListener('click',e=>{if(e.target===$('#settingsOverlay'))$('#settingsOverlay').classList.remove('active')});
 $('#settingsCopyCode').addEventListener('click',()=>{navigator.clipboard?.writeText(currentRoom);showToast('Code copied!');$('#settingsOverlay').classList.remove('active')});
 $('#settingsShare').addEventListener('click',async()=>{
@@ -852,6 +908,8 @@ function resetChat(){
   seenMsgIds.clear();allMessages=[];$('#messagesList').innerHTML='';
   seenSet.clear();pendingSeen.clear();unreadCount=0;updateFabBadge();
   onlineUsers=[];wsConnected=false;renderHeader();
+  joinedRoom='';headUnread=0;
+  try{if(window.AndroidNative)AndroidNative.hideChatHead()}catch(e){}
   $('#typingIndicator').style.display='none';seenTyping.clear();
   pendingReply=null;$('#replyBar').classList.remove('active');
   pendingPhoto=null;$('#photoPreview').classList.remove('active');
