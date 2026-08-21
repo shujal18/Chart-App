@@ -369,9 +369,20 @@ function updateDots(){
   $$('#pwDots .pw-dot').forEach((d,i)=>d.classList.toggle('filled',i<pwCode.length));
 }
 function checkPassword(){
-  if(pwCode===APP_PASSWORD){pwCode='';showScreen('setup')}
+  if(pwCode===APP_PASSWORD){
+    pwCode='';
+    const s=getSession();
+    if(s&&s.n&&s.a&&s.r)restoreSession(s);
+    else showScreen('setup');
+  }
   else{$('#pwErr').textContent='Wrong password!';playSound('err');pwCode='';updateDots();
     setTimeout(()=>$('#pwErr').textContent='',1500)}
+}
+function getSession(){try{return JSON.parse(localStorage.getItem('chatSession'))}catch(e){return null}}
+function restoreSession(s){
+  myName=s.n;myAvatar=s.a;currentRoom=s.r;isCreating=false;
+  wsConnected=false;onlineUsers=[];
+  renderHeader();showScreen('chat');connectWS();
 }
 initPassword();
 
@@ -399,11 +410,30 @@ $('#emojiGrid').addEventListener('click',e=>{
 });
 
 // ========= PHOTO =========
+function compressImage(dataUrl,maxDim,q){
+  return new Promise(res=>{
+    const img=new Image();
+    img.onload=()=>{
+      let w=img.width,h=img.height;
+      if(Math.max(w,h)>maxDim){const s=maxDim/Math.max(w,h);w=Math.round(w*s);h=Math.round(h*s)}
+      const c=document.createElement('canvas');c.width=w;c.height=h;
+      c.getContext('2d').drawImage(img,0,0,w,h);
+      res(c.toDataURL('image/jpeg',q));
+    };
+    img.onerror=()=>res(dataUrl);
+    img.src=dataUrl;
+  });
+}
 $('#photoBtn').addEventListener('click',()=>$('#photoInput').click());
 $('#photoInput').addEventListener('change',e=>{
   const file=e.target.files[0];if(!file)return;
   const reader=new FileReader();
-  reader.onload=()=>{pendingPhoto=reader.result;$('#photoPreviewImg').src=reader.result;$('#photoPreview').classList.add('active');$('#emojiPicker').classList.remove('open');$('#emojiBtn').classList.remove('active')};
+  reader.onload=async()=>{
+    try{
+      pendingPhoto=await compressImage(reader.result,1280,0.8);
+    }catch(err){pendingPhoto=reader.result}
+    $('#photoPreviewImg').src=pendingPhoto;$('#photoPreview').classList.add('active');$('#emojiPicker').classList.remove('open');$('#emojiBtn').classList.remove('active');
+  };
   reader.readAsDataURL(file);e.target.value='';
 });
 $('#photoClose').addEventListener('click',()=>{pendingPhoto=null;$('#photoPreview').classList.remove('active')});
@@ -491,7 +521,9 @@ function renderHeader(){
 
 function handleMessage(data){
   switch(data.type){
-    case'join_success':joinedRoom=data.room;setConnStatus(true);addSystem('You joined '+data.room);playSound('join');break;
+    case'join_success':joinedRoom=data.room;setConnStatus(true);addSystem('You joined '+data.room);playSound('join');
+      try{localStorage.setItem('chatSession',JSON.stringify({n:myName,a:myAvatar,r:currentRoom}))}catch(e){}
+      break;
     case'error':showToast(data.message);playSound('err');break;
     case'message':onNewMessage(data.message);break;
     case'messages_cleared':onMessagesCleared();break;
@@ -600,6 +632,7 @@ function onTyping(data){
 function updateOnline(data){
   onlineUsers=data.users||[];
   renderHeader();
+  updateChatHead();
 }
 
 function cleanupOldMessages(){
@@ -910,6 +943,7 @@ function resetChat(){
   onlineUsers=[];wsConnected=false;renderHeader();
   joinedRoom='';headUnread=0;
   try{if(window.AndroidNative)AndroidNative.hideChatHead()}catch(e){}
+  try{localStorage.removeItem('chatSession')}catch(e){}
   $('#typingIndicator').style.display='none';seenTyping.clear();
   pendingReply=null;$('#replyBar').classList.remove('active');
   pendingPhoto=null;$('#photoPreview').classList.remove('active');
