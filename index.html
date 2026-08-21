@@ -549,6 +549,7 @@ function handleMessage(data){
     case'join_success':joinedRoom=data.room;setConnStatus(true);
       if(!announcedJoin){announcedJoin=true;addSystem('You joined '+data.room);playSound('join')}
       try{localStorage.setItem('chatSession',JSON.stringify({n:myName,a:myAvatar,r:currentRoom}))}catch(e){}
+      try{if(window.AndroidNative)AndroidNative.setSecretMode(isSecretRoom(),wsUrl(),myName,myAvatar)}catch(e){}
       break;
     case'error':showToast(data.message);playSound('err');break;
     case'message':onNewMessage(data.message);break;
@@ -563,7 +564,7 @@ function handleMessage(data){
     case'nudge':onNudge(data);break;
     case'cleanup':cleanupOldMessages();break;
     case'pong':break;
-    case'left_room':showScreen('room');showToast('Left room');break;
+    case'left_room':try{if(window.AndroidNative)AndroidNative.setSecretMode(false,'','','')}catch(e){}showScreen('room');showToast('Left room');break;
   }
 }
 
@@ -1036,6 +1037,7 @@ $('#backBtn').addEventListener('click',()=>{
 });
 function resetChat(){
   closeSocket();
+  try{if(window.AndroidNative)AndroidNative.setSecretMode(false,'','','')}catch(e){}
   seenMsgIds.clear();allMessages=[];$('#messagesList').innerHTML='';
   seenSet.clear();pendingSeen.clear();unreadCount=0;updateFabBadge();
   onlineUsers=[];wsConnected=false;renderHeader();

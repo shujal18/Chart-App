@@ -79,23 +79,32 @@ wss.on("connection", (ws) => {
                 if (targetRoom) {
                     if (!rooms[targetRoom]) rooms[targetRoom] = { users: new Set(), messages: [], lastActivity: Date.now() };
                     const maxUsers = targetRoom === "AALUOO_ROOM" ? SECRET_ROOM_MAX : MAX_PER_ROOM;
-                    if (rooms[targetRoom].users.size >= maxUsers) {
+                    let currentCount;
+                    if (targetRoom === "AALUOO_ROOM") {
+                        currentCount = new Set([...rooms[targetRoom].users].map(u => (u.username || "").trim().toLowerCase())).size;
+                    } else {
+                        currentCount = rooms[targetRoom].users.size;
+                    }
+                    if (currentCount >= maxUsers) {
                         ws.send(JSON.stringify({ type: "error", message: targetRoom === "AALUOO_ROOM" ? "Secret room is full! Only 2 users allowed." : "Room is full!" }));
                         return;
                     }
                     ws.room = targetRoom;
                     ws.username = data.username;
                     ws.avatar = data.avatar;
+                    ws.silent = !!data.silent;
                     rooms[ws.room].users.add(ws);
                     rooms[ws.room].lastActivity = Date.now();
 
                     ws.send(JSON.stringify({ type: "join_success", room: ws.room }));
-                    const now = Date.now();
-                    rooms[ws.room].messages.filter(m => now - (m.timestamp || 0) < MSG_TTL)
-                        .forEach(m => ws.send(JSON.stringify({ type: "message", message: m })));
+                    if (!ws.silent) {
+                        const now = Date.now();
+                        rooms[ws.room].messages.filter(m => now - (m.timestamp || 0) < MSG_TTL)
+                            .forEach(m => ws.send(JSON.stringify({ type: "message", message: m })));
 
-                    broadcast(ws.room, { type: "system", text: `${ws.avatar} ${ws.username} joined!` });
-                    broadcastOnline(ws.room);
+                        broadcast(ws.room, { type: "system", text: `${ws.avatar} ${ws.username} joined!` });
+                        broadcastOnline(ws.room);
+                    }
                 } else {
                     ws.send(JSON.stringify({ type: "error", message: "Invalid room code!" }));
                 }
@@ -202,10 +211,15 @@ wss.on("connection", (ws) => {
 
     ws.on("close", () => {
         if (ws.room && rooms[ws.room]) {
-            rooms[ws.room].users.delete(ws);
-            broadcast(ws.room, { type: "system", text: `${ws.username} left.` });
-            if (rooms[ws.room].users.size === 0) delete rooms[ws.room];
-            else broadcastOnline(ws.room);
+            const room = ws.room;
+            rooms[room].users.delete(ws);
+            if (ws.silent) {
+                if (rooms[room].users.size === 0) delete rooms[room];
+            } else {
+                broadcast(room, { type: "system", text: `${ws.username} left.` });
+                if (rooms[room].users.size === 0) delete rooms[room];
+                else broadcastOnline(room);
+            }
         }
     });
 });
@@ -220,8 +234,14 @@ function broadcast(room, data) {
 
 function broadcastOnline(room) {
     if (!rooms[room]) return;
-    const count = rooms[room].users.size;
-    const users = [...rooms[room].users].map(u => ({ name: u.username, avatar: u.avatar }));
+    const seen = new Set();
+    const users = [];
+    for (const u of rooms[room].users) {
+        if (u.silent) continue;
+        const key = (u.username || "").trim().toLowerCase();
+        if (!seen.has(key)) { seen.add(key); users.push({ name: u.username, avatar: u.avatar }); }
+    }
+    const count = Math.max(users.length, 1);
     rooms[room].users.forEach(c => {
         if (c.readyState === WebSocket.OPEN) c.send(JSON.stringify({ type: "online_count", count, users }));
     });
