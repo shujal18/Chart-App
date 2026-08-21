@@ -79,13 +79,15 @@ wss.on("connection", (ws) => {
                 if (targetRoom) {
                     if (!rooms[targetRoom]) rooms[targetRoom] = { users: new Set(), messages: [], lastActivity: Date.now() };
                     const maxUsers = targetRoom === "AALUOO_ROOM" ? SECRET_ROOM_MAX : MAX_PER_ROOM;
-                    let currentCount;
+                    let roomFull;
                     if (targetRoom === "AALUOO_ROOM") {
-                        currentCount = new Set([...rooms[targetRoom].users].map(u => (u.username || "").trim().toLowerCase())).size;
+                        const unameKey = (data.username || "").trim().toLowerCase();
+                        const existingKeys = new Set([...rooms[targetRoom].users].map(u => (u.username || "").trim().toLowerCase()));
+                        roomFull = !existingKeys.has(unameKey) && existingKeys.size >= maxUsers;
                     } else {
-                        currentCount = rooms[targetRoom].users.size;
+                        roomFull = rooms[targetRoom].users.size >= maxUsers;
                     }
-                    if (currentCount >= maxUsers) {
+                    if (roomFull) {
                         ws.send(JSON.stringify({ type: "error", message: targetRoom === "AALUOO_ROOM" ? "Secret room is full! Only 2 users allowed." : "Room is full!" }));
                         return;
                     }
