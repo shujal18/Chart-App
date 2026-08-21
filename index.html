@@ -75,7 +75,7 @@ body{position:fixed;top:0;left:0;right:0;bottom:0;padding:env(safe-area-inset-to
 .time-divider{text-align:center;margin:12px 0;position:relative;z-index:1}
 .time-divider span{background:rgba(17,27,33,.85);color:var(--secondary);font-size:12px;padding:4px 12px;border-radius:8px}
 
-.message{display:flex;margin:2px 0;position:relative;z-index:1;animation:msgIn .2s ease}
+.message{display:flex;margin:6px 0;position:relative;z-index:1;animation:msgIn .2s ease}
 @keyframes msgIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 .message.sent{justify-content:flex-end}
 .message.received{justify-content:flex-start}
@@ -171,7 +171,7 @@ body:not(.light){--chip-bg:rgba(17,27,33,.85);--chip-fg:var(--secondary);--time-
 .reactions{display:flex;flex-wrap:wrap;gap:3px;margin-top:-8px;padding:0 6px;z-index:2;position:relative}
 .reactions .react-chip{display:inline-flex;align-items:center;gap:3px;background:var(--header);border:1px solid var(--divider);border-radius:14px;padding:2px 7px;font-size:13.5px;cursor:pointer;transition:transform .15s;box-shadow:0 1px 3px var(--shadow)}
 .reactions .react-chip:active{transform:scale(.92)}
-.reactions .react-chip.mine{border-color:var(--accent);background:rgba(0,168,132,.18)}
+.reactions .react-chip.mine{border-color:var(--accent)}
 .reactions .react-chip .rc-count{font-size:11px;color:var(--secondary);font-weight:600}
 
 /* Action menu reaction row */
