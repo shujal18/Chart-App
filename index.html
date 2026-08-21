@@ -612,8 +612,8 @@ function updateChatHead(){
 let lastNudgeSent=0;
 function vibrateDevice(pattern){
   let ok=false;
-  try{if(navigator.vibrate&&navigator.vibrate(pattern))ok=true}catch(e){}
-  if(!ok){try{if(window.AndroidNative)AndroidNative.vibrate(pattern.join(','))}catch(e){}}
+  try{if(window.AndroidNative){AndroidNative.vibrate(pattern.join(','));ok=true}}catch(e){}
+  if(!ok){try{if(navigator.vibrate&&navigator.vibrate(pattern))ok=true}catch(e){}}
 }
 function onNudge(data){
   playSound('join');
