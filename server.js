@@ -15,6 +15,7 @@ const wss = new WebSocket.Server({ server, maxPayload: 5 * 1024 * 1024 });
 const rooms = {};
 let latestPublicCode = "";
 const MAX_PER_ROOM = 6;
+const SECRET_ROOM_MAX = 2;
 const MAX_HISTORY = 50;
 const MSG_TTL = 3 * 60 * 1000;
 const INACTIVE_TIMEOUT = 5 * 60 * 1000;
@@ -77,8 +78,9 @@ wss.on("connection", (ws) => {
 
                 if (targetRoom) {
                     if (!rooms[targetRoom]) rooms[targetRoom] = { users: new Set(), messages: [], lastActivity: Date.now() };
-                    if (rooms[targetRoom].users.size >= MAX_PER_ROOM) {
-                        ws.send(JSON.stringify({ type: "error", message: "Room is full!" }));
+                    const maxUsers = targetRoom === "AALUOO_ROOM" ? SECRET_ROOM_MAX : MAX_PER_ROOM;
+                    if (rooms[targetRoom].users.size >= maxUsers) {
+                        ws.send(JSON.stringify({ type: "error", message: targetRoom === "AALUOO_ROOM" ? "Secret room is full! Only 2 users allowed." : "Room is full!" }));
                         return;
                     }
                     ws.room = targetRoom;
@@ -120,6 +122,14 @@ wss.on("connection", (ws) => {
                 rooms[ws.room].lastActivity = Date.now();
                 if (rooms[ws.room].messages.length > MAX_HISTORY) rooms[ws.room].messages.shift();
                 broadcast(ws.room, { type: "message", message: msgPayload });
+            }
+
+            if (data.type === "nudge" && ws.room === "AALUOO_ROOM") {
+                rooms[ws.room].lastActivity = Date.now();
+                const out = JSON.stringify({ type: "nudge", from: ws.username, avatar: ws.avatar });
+                rooms[ws.room].users.forEach(c => {
+                    if (c !== ws && c.readyState === WebSocket.OPEN) c.send(out);
+                });
             }
 
             if (data.type === "clear_messages" && ws.room === "AALUOO_ROOM") {

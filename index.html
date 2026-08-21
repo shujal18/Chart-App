@@ -312,6 +312,7 @@ body:not(.light){--chip-bg:rgba(17,27,33,.85);--chip-fg:var(--secondary);--time-
       <div class="settings-title">Settings</div>
       <button id="settingsClear" style="display:none"><i class="fas fa-broom"></i>Clear All Messages</button>
       <button id="settingsChatHead" style="display:none"><i class="fas fa-commenting"></i><span id="chatHeadLabel">Chat Head: Off</span></button>
+      <button id="settingsVibrate" style="display:none"><i class="fas fa-mobile-screen-button"></i>Vibrate Device</button>
       <button id="settingsShare"><i class="fas fa-share-nodes"></i>Share Room</button>
       <button id="settingsCopyCode"><i class="fas fa-copy"></i>Copy Room Code</button>
       <button id="settingsTheme"><i class="fas fa-sun"></i><span id="themeLabel">Light Mode</span></button>
@@ -559,6 +560,7 @@ function handleMessage(data){
     case'system':addSystem(data.text);playSound('join');break;
     case'typing':onTyping(data);break;
     case'online_count':updateOnline(data);break;
+    case'nudge':onNudge(data);break;
     case'cleanup':cleanupOldMessages();break;
     case'pong':break;
     case'left_room':showScreen('room');showToast('Left room');break;
@@ -603,6 +605,19 @@ function updateChatHead(){
       AndroidNative.showChatHead('💬','Waiting for friend...',headUnread);
     }
   }catch(e){}
+}
+
+// ========= SECRET ROOM: REMOTE NUDGE / VIBRATE =========
+let lastNudgeSent=0;
+function vibrateDevice(pattern){
+  let ok=false;
+  try{if(navigator.vibrate&&navigator.vibrate(pattern))ok=true}catch(e){}
+  if(!ok){try{if(window.AndroidNative)AndroidNative.vibrate(pattern.join(','))}catch(e){}}
+}
+function onNudge(data){
+  playSound('join');
+  vibrateDevice([0,350,120,350,120,350]);
+  showToast((data.avatar||'👋')+' '+(data.from||'Someone')+' nudged you!');
 }
 
 // ========= SEEN RECEIPTS =========
@@ -940,6 +955,7 @@ $('#settingsBtn').addEventListener('click',()=>{
   const secret=isSecretRoom();
   $('#settingsClear').style.display=secret?'flex':'none';
   $('#settingsChatHead').style.display=secret?'flex':'none';
+  $('#settingsVibrate').style.display=secret?'flex':'none';
   $('#settingsShare').style.display=secret?'none':'flex';
   $('#settingsCopyCode').style.display=secret?'none':'flex';
   $('#settingsOverlay').classList.add('active');
@@ -966,6 +982,16 @@ $('#settingsChatHead').addEventListener('click',()=>{
   }
   try{localStorage.setItem('chatHeadEnabled',chatHeadEnabled?'1':'0')}catch(e){}
   syncChatHeadLabel();
+});
+$('#settingsVibrate').addEventListener('click',()=>{
+  if(!ws||ws.readyState!==1){showToast('Not connected');return}
+  const now=Date.now();
+  if(now-lastNudgeSent<3000){showToast('Wait a moment before nudging again');return}
+  lastNudgeSent=now;
+  ws.send(JSON.stringify({type:'nudge'}));
+  vibrateDevice([0,80]);
+  showToast('👋 Nudge sent!');
+  $('#settingsOverlay').classList.remove('active');
 });
 $('#settingsOverlay').addEventListener('click',e=>{if(e.target===$('#settingsOverlay'))$('#settingsOverlay').classList.remove('active')});
 $('#settingsCopyCode').addEventListener('click',()=>{navigator.clipboard?.writeText(currentRoom);showToast('Code copied!');$('#settingsOverlay').classList.remove('active')});
