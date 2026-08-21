@@ -62,7 +62,7 @@ wss.on("connection", (ws) => {
 
             if (data.type === "join") {
                 const val = data.room.toUpperCase();
-                const isSecret = (val === "AALU00" || val === "AALUOO_ROOM");
+                const isSecret = (val === "SUSHU" || val === "AALUOO_ROOM");
                 let targetRoom = null;
                 if (isSecret) {
                     const uname = (data.username || "").trim().toLowerCase();
