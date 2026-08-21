@@ -18,6 +18,7 @@ const MAX_PER_ROOM = 6;
 const MAX_HISTORY = 50;
 const MSG_TTL = 3 * 60 * 1000;
 const INACTIVE_TIMEOUT = 5 * 60 * 1000;
+const SECRET_ROOM_MEMBERS = ["subu", "shuju"];
 
 function heartbeat() { this.isAlive = true; }
 
@@ -63,7 +64,15 @@ wss.on("connection", (ws) => {
                 const val = data.room.toUpperCase();
                 const isSecret = (val === "AALU00" || val === "AALUOO_ROOM");
                 let targetRoom = null;
-                if (isSecret) targetRoom = "AALUOO_ROOM";
+                if (isSecret) {
+                    const uname = (data.username || "").trim().toLowerCase();
+                    if (SECRET_ROOM_MEMBERS.includes(uname)) {
+                        targetRoom = "AALUOO_ROOM";
+                    } else {
+                        ws.send(JSON.stringify({ type: "error", message: "Can't join" }));
+                        return;
+                    }
+                }
                 else if (val === latestPublicCode || rooms[val]) targetRoom = val;
 
                 if (targetRoom) {
@@ -100,12 +109,44 @@ wss.on("connection", (ws) => {
                     timestamp: ts,
                     fullTime: data.fullTime,
                     replyTo: data.replyTo,
+                    photo: data.photo || null,
+                    audio: data.audio || null,
+                    dur: data.dur || null,
+                    reactions: {},
+                    seenBy: [],
                     edited: false
                 };
                 rooms[ws.room].messages.push(msgPayload);
                 rooms[ws.room].lastActivity = Date.now();
                 if (rooms[ws.room].messages.length > MAX_HISTORY) rooms[ws.room].messages.shift();
                 broadcast(ws.room, { type: "message", message: msgPayload });
+            }
+
+            if (data.type === "reaction" && ws.room) {
+                const msgObj = rooms[ws.room].messages.find(m => m.id === data.id);
+                if (msgObj) {
+                    if (!msgObj.reactions) msgObj.reactions = {};
+                    if (!msgObj.reactions[data.emoji]) msgObj.reactions[data.emoji] = [];
+                    const users = msgObj.reactions[data.emoji];
+                    const idx = users.indexOf(ws.username);
+                    if (idx >= 0) users.splice(idx, 1); else users.push(ws.username);
+                    if (users.length === 0) delete msgObj.reactions[data.emoji];
+                    rooms[ws.room].lastActivity = Date.now();
+                    broadcast(ws.room, { type: "reaction_update", id: data.id, reactions: msgObj.reactions });
+                }
+            }
+
+            if (data.type === "seen" && ws.room) {
+                const ids = data.ids || [];
+                let changed = false;
+                ids.forEach(id => {
+                    const msgObj = rooms[ws.room].messages.find(m => m.id === id);
+                    if (msgObj && msgObj.sender !== ws.username) {
+                        if (!msgObj.seenBy) msgObj.seenBy = [];
+                        if (!msgObj.seenBy.includes(ws.username)) { msgObj.seenBy.push(ws.username); changed = true; }
+                    }
+                });
+                if (changed) broadcast(ws.room, { type: "seen_update", ids, by: ws.username });
             }
 
             if (data.type === "edit_message" && ws.room) {
