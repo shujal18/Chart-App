@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>Chat</title>
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=0">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=0,viewport-fit=cover,interactive-widget=resizes-content">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💬</text></svg>">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <style>
@@ -68,6 +68,7 @@ body{position:fixed;top:0;left:0;right:0;bottom:0;padding:env(safe-area-inset-to
 #chat .chat-header .header-actions{display:flex;gap:2px}
 #chat .chat-header .header-actions button{width:40px;height:40px;display:flex;align-items:center;justify-content:center;background:none;border:none;color:var(--text);font-size:18px;cursor:pointer;border-radius:50%}
 
+#chat{padding-bottom:var(--kbh,0px)}
 #chat .messages{flex:1;overflow-y:auto;padding:8px 12px;scroll-behavior:smooth;position:relative}
 #chat .messages::-webkit-scrollbar{width:4px}
 #chat .messages::-webkit-scrollbar-thumb{background:rgba(255,255,255,.15);border-radius:4px}
@@ -116,10 +117,15 @@ body{position:fixed;top:0;left:0;right:0;bottom:0;padding:env(safe-area-inset-to
 #chat .reply-bar .reply-info .rp-text{font-size:12.5px;color:var(--secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #chat .reply-bar .reply-close{width:32px;height:32px;display:flex;align-items:center;justify-content:center;background:none;border:none;color:var(--secondary);font-size:18px;cursor:pointer}
 
-#chat .input-bar{background:var(--header);padding:6px 6px;display:flex;align-items:flex-end;gap:4px;flex-shrink:0;z-index:10}
+#chat .input-bar{background:var(--header);padding:6px 6px;padding-bottom:calc(6px + env(safe-area-inset-bottom,0px));display:flex;align-items:flex-end;gap:4px;flex-shrink:0;z-index:10}
 #chat .input-bar .icon-btn{width:44px;height:44px;display:flex;align-items:center;justify-content:center;background:none;border:none;color:var(--secondary);font-size:22px;cursor:pointer;flex-shrink:0;border-radius:50%}
 #chat .input-bar .icon-btn.active{color:var(--accent)}
-#chat .input-bar .msg-input{flex:1;background:var(--input);border:none;border-radius:24px;padding:10px 16px;color:var(--text);font-size:15px;outline:none;max-height:100px;overflow-y:auto;resize:none;line-height:1.4;min-height:44px;font-family:inherit}
+#chat .input-bar .msg-input{flex:1;width:100%;background:var(--input);border:none;border-radius:24px;padding:10px 16px;color:var(--text);font-size:15px;outline:none;max-height:100px;overflow-y:auto;resize:none;line-height:1.4;min-height:44px;font-family:inherit}
+@media(max-width:360px){
+  #chat .input-bar{gap:2px;padding-left:4px;padding-right:4px}
+  #chat .input-bar .icon-btn,#chat .input-bar .send-btn{width:38px;height:38px;font-size:19px}
+  #chat .input-bar .msg-input{padding:9px 12px;font-size:14px}
+}
 #chat .input-bar .msg-input::placeholder{color:var(--secondary)}
 #chat .input-bar .send-btn{width:44px;height:44px;display:flex;align-items:center;justify-content:center;background:var(--accent);border:none;border-radius:50%;color:#fff;font-size:18px;cursor:pointer;flex-shrink:0;transition:transform .15s}
 #chat .input-bar .send-btn:active{transform:scale(.9)}
@@ -949,7 +955,29 @@ function sendMessage(){
   if(pendingReply){pendingReply=null;$('#replyBar').classList.remove('active')}
   typingState=false;clearTimeout(typingTimeout);
   try{ws.send(JSON.stringify({type:'typing',isTyping:false}))}catch(e){}
+  try{$('#msgInput').focus()}catch(e){}
+  if(nearBottom())scrollBottom();
+  setTimeout(()=>{if(nearBottom())scrollBottom()},350);
 }
+
+// ========= KEYBOARD: keep last message above keyboard (WhatsApp-style) =========
+(function(){
+  if(!window.visualViewport)return;
+  const vv=visualViewport;
+  const onKB=()=>{
+    const overlap=Math.max(0,Math.round(window.innerHeight-vv.height-vv.offsetTop));
+    document.documentElement.style.setProperty('--kbh',overlap+'px');
+    if(overlap>0&&nearBottom())scrollBottom();
+  };
+  vv.addEventListener('resize',onKB);
+  vv.addEventListener('scroll',onKB);
+})();
+
+// ========= KEEP KEYBOARD OPEN when tapping composer buttons =========
+['sendBtn','micBtn','emojiBtn','photoBtn'].forEach(id=>{
+  const el=document.getElementById(id);
+  if(el)el.addEventListener('pointerdown',e=>e.preventDefault());
+});
 
 // ========= SETTINGS =========
 $('#settingsBtn').addEventListener('click',()=>{
