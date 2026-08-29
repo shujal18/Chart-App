@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>Chat</title>
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=0,viewport-fit=cover,interactive-widget=resizes-visual">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=0,viewport-fit=cover">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💬</text></svg>">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <style>
@@ -68,7 +68,7 @@ body{position:fixed;top:0;left:0;right:0;bottom:0;padding:env(safe-area-inset-to
 #chat .chat-header .header-actions{display:flex;gap:2px}
 #chat .chat-header .header-actions button{width:40px;height:40px;display:flex;align-items:center;justify-content:center;background:none;border:none;color:var(--text);font-size:18px;cursor:pointer;border-radius:50%}
 
-#chat{padding-bottom:var(--kbh,0px)}
+#chat{padding-bottom:0px}
 #chat .messages{flex:1;overflow-y:auto;padding:8px 12px;scroll-behavior:smooth;position:relative}
 #chat .messages::-webkit-scrollbar{width:4px}
 #chat .messages::-webkit-scrollbar-thumb{background:rgba(255,255,255,.15);border-radius:4px}
@@ -962,29 +962,18 @@ function sendMessage(){
 
 // ========= KEYBOARD: keep last message above keyboard (WhatsApp-style) =========
 (function(){
-  let closedH=window.innerHeight;
-  function setKBH(overlap){
-    const maxKBH=Math.round(closedH*0.55);
-    const clamped=Math.min(Math.max(0,overlap),maxKBH);
-    document.documentElement.style.setProperty('--kbh',clamped+'px');
-    if(clamped>0&&nearBottom())scrollBottom();
-  }
-  document.addEventListener('focusin',e=>{
-    if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA'){
-      closedH=window.innerHeight;
+  if(!window.visualViewport)return;
+  var lastVVH=visualViewport.height;
+  visualViewport.addEventListener('resize',function(){
+    var cur=visualViewport.height;
+    if(cur>lastVVH+50){
+      setTimeout(function(){if(nearBottom())scrollBottom()},150);
     }
+    lastVVH=cur;
   });
-  if(window.visualViewport){
-    visualViewport.addEventListener('resize',()=>{
-      setKBH(Math.max(0,Math.round(closedH-visualViewport.height)));
-    });
-  }
-  window.addEventListener('resize',()=>{
-    setKBH(Math.max(0,Math.round(closedH-window.innerHeight)));
+  window.addEventListener('resize',function(){
+    setTimeout(function(){if(nearBottom())scrollBottom()},150);
   });
-  window.addEventListener('blur',()=>{setKBH(0)});
-  window.addEventListener('focus',()=>{setTimeout(()=>{closedH=window.innerHeight},200)});
-  window.addEventListener('orientationchange',()=>{setTimeout(()=>{closedH=window.innerHeight},500)});
 })();
 
 // ========= KEEP KEYBOARD OPEN when tapping composer buttons =========
