@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>Chat</title>
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=0,viewport-fit=cover,interactive-widget=resizes-content">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=0,viewport-fit=cover,interactive-widget=resizes-visual">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💬</text></svg>">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <style>
@@ -962,27 +962,29 @@ function sendMessage(){
 
 // ========= KEYBOARD: keep last message above keyboard (WhatsApp-style) =========
 (function(){
-  let baseH=window.innerHeight;
+  let closedH=window.innerHeight;
   function setKBH(overlap){
-    const maxKBH=Math.round(baseH*0.55);
+    const maxKBH=Math.round(closedH*0.55);
     const clamped=Math.min(Math.max(0,overlap),maxKBH);
     document.documentElement.style.setProperty('--kbh',clamped+'px');
     if(clamped>0&&nearBottom())scrollBottom();
   }
-  if(window.visualViewport){
-    const onVV=()=>{setKBH(Math.round(baseH-visualViewport.height))};
-    visualViewport.addEventListener('resize',onVV);
-    visualViewport.addEventListener('scroll',onVV);
-  }
-  window.addEventListener('resize',()=>{
-    setKBH(Math.round(baseH-window.innerHeight));
-  });
-  window.addEventListener('orientationchange',()=>{setTimeout(()=>{baseH=window.innerHeight},300)});
   document.addEventListener('focusin',e=>{
     if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA'){
-      setTimeout(()=>{baseH=window.innerHeight},400);
+      closedH=window.innerHeight;
     }
   });
+  if(window.visualViewport){
+    visualViewport.addEventListener('resize',()=>{
+      setKBH(Math.max(0,Math.round(closedH-visualViewport.height)));
+    });
+  }
+  window.addEventListener('resize',()=>{
+    setKBH(Math.max(0,Math.round(closedH-window.innerHeight)));
+  });
+  window.addEventListener('blur',()=>{setKBH(0)});
+  window.addEventListener('focus',()=>{setTimeout(()=>{closedH=window.innerHeight},200)});
+  window.addEventListener('orientationchange',()=>{setTimeout(()=>{closedH=window.innerHeight},500)});
 })();
 
 // ========= KEEP KEYBOARD OPEN when tapping composer buttons =========
