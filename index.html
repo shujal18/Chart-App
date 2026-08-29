@@ -990,7 +990,7 @@ function sendMessage(){
 // ========= KEEP KEYBOARD OPEN when tapping composer buttons =========
 ['sendBtn','micBtn','emojiBtn','photoBtn'].forEach(id=>{
   const el=document.getElementById(id);
-  if(el)el.addEventListener('pointerdown',e=>e.preventDefault());
+  if(el)el.addEventListener('mousedown',e=>e.preventDefault());
 });
 
 // ========= SETTINGS =========
