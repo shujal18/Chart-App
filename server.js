@@ -256,4 +256,4 @@ function broadcastOnline(room) {
 }
 
 const PORT = process.env.PORT || 8080;
-server.listen(PORT, "0.0.0.0", () => console.log(`Server running on ${PORT}`));
+server.listen(PORT, "0.0.0.0", () => console.log(`Server running on ${PORT} (in-memory, ${MSG_TTL/60000} min TTL)`));

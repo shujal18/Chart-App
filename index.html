@@ -962,15 +962,27 @@ function sendMessage(){
 
 // ========= KEYBOARD: keep last message above keyboard (WhatsApp-style) =========
 (function(){
-  if(!window.visualViewport)return;
-  const vv=visualViewport;
-  const onKB=()=>{
-    const overlap=Math.max(0,Math.round(window.innerHeight-vv.height-vv.offsetTop));
-    document.documentElement.style.setProperty('--kbh',overlap+'px');
-    if(overlap>0&&nearBottom())scrollBottom();
-  };
-  vv.addEventListener('resize',onKB);
-  vv.addEventListener('scroll',onKB);
+  let baseH=window.innerHeight;
+  function setKBH(overlap){
+    const maxKBH=Math.round(baseH*0.55);
+    const clamped=Math.min(Math.max(0,overlap),maxKBH);
+    document.documentElement.style.setProperty('--kbh',clamped+'px');
+    if(clamped>0&&nearBottom())scrollBottom();
+  }
+  if(window.visualViewport){
+    const onVV=()=>{setKBH(Math.round(baseH-visualViewport.height))};
+    visualViewport.addEventListener('resize',onVV);
+    visualViewport.addEventListener('scroll',onVV);
+  }
+  window.addEventListener('resize',()=>{
+    setKBH(Math.round(baseH-window.innerHeight));
+  });
+  window.addEventListener('orientationchange',()=>{setTimeout(()=>{baseH=window.innerHeight},300)});
+  document.addEventListener('focusin',e=>{
+    if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA'){
+      setTimeout(()=>{baseH=window.innerHeight},400);
+    }
+  });
 })();
 
 // ========= KEEP KEYBOARD OPEN when tapping composer buttons =========
