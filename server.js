@@ -63,12 +63,12 @@ wss.on("connection", (ws) => {
 
             if (data.type === "join") {
                 const val = data.room.toUpperCase();
-                const isSecret = (val === "SUSHU" || val === "AALUOO_ROOM");
+                const isSecret = (val === "SUSHU" || val === "SK_ROOM");
                 let targetRoom = null;
                 if (isSecret) {
                     const uname = (data.username || "").trim().toLowerCase();
                     if (SECRET_ROOM_MEMBERS.includes(uname)) {
-                        targetRoom = "AALUOO_ROOM";
+                        targetRoom = "SK_ROOM";
                     } else {
                         ws.send(JSON.stringify({ type: "error", message: "Can't join" }));
                         return;
@@ -78,13 +78,13 @@ wss.on("connection", (ws) => {
 
                 if (targetRoom) {
                     if (!rooms[targetRoom]) rooms[targetRoom] = { users: new Set(), messages: [], lastActivity: Date.now() };
-                    const maxUsers = targetRoom === "AALUOO_ROOM" ? SECRET_ROOM_MAX : MAX_PER_ROOM;
+                    const maxUsers = targetRoom === "SK_ROOM" ? SECRET_ROOM_MAX : MAX_PER_ROOM;
                     const unameKey = (data.username || "").trim().toLowerCase();
                     const existingKeys = [...rooms[targetRoom].users].filter(u => !u.silent).map(u => (u.username || "").trim().toLowerCase());
                     const nameTaken = existingKeys.includes(unameKey);
                     const roomFull = rooms[targetRoom].users.size >= maxUsers;
                     if (roomFull || nameTaken) {
-                        const msg = nameTaken ? "Name already taken in this room!" : (targetRoom === "AALUOO_ROOM" ? "Secret room is full! Only 2 users allowed." : "Room is full!");
+                        const msg = nameTaken ? "Name already taken in this room!" : (targetRoom === "SK_ROOM" ? "Secret room is full! Only 2 users allowed." : "Room is full!");
                         ws.send(JSON.stringify({ type: "error", message: msg }));
                         return;
                     }
@@ -135,7 +135,7 @@ wss.on("connection", (ws) => {
                 broadcast(ws.room, { type: "message", message: msgPayload });
             }
 
-            if (data.type === "nudge" && ws.room === "AALUOO_ROOM") {
+            if (data.type === "nudge" && ws.room === "SK_ROOM") {
                 rooms[ws.room].lastActivity = Date.now();
                 const out = JSON.stringify({ type: "nudge", from: ws.username, avatar: ws.avatar });
                 rooms[ws.room].users.forEach(c => {
@@ -143,7 +143,7 @@ wss.on("connection", (ws) => {
                 });
             }
 
-            if (data.type === "clear_messages" && ws.room === "AALUOO_ROOM") {
+            if (data.type === "clear_messages" && ws.room === "SK_ROOM") {
                 rooms[ws.room].messages = [];
                 rooms[ws.room].lastActivity = Date.now();
                 broadcast(ws.room, { type: "messages_cleared" });
