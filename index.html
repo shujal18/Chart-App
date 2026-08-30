@@ -1037,9 +1037,7 @@ $('#settingsChatHead').addEventListener('click',()=>{
 $('#settingsVibrate').addEventListener('click',()=>{
   if(!ws||ws.readyState!==1){showToast('Not connected');return}
   ws.send(JSON.stringify({type:'nudge'}));
-  vibrateDevice([0,80,50,80,50,80,50,80,50,80]);
   showToast('👋 Nudge sent!');
-  $('#settingsOverlay').classList.remove('active');
 });
 $('#settingsOverlay').addEventListener('click',e=>{if(e.target===$('#settingsOverlay'))$('#settingsOverlay').classList.remove('active')});
 $('#settingsCopyCode').addEventListener('click',()=>{navigator.clipboard?.writeText(currentRoom);showToast('Code copied!');$('#settingsOverlay').classList.remove('active')});
