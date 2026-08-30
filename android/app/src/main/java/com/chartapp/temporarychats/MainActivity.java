@@ -70,6 +70,19 @@ public class MainActivity extends BridgeActivity {
             } catch (Exception e) {
             }
         }
+        if (KeepAliveService.sUrl != null && !KeepAliveService.sUrl.isEmpty()
+                && KeepAliveService.sRoom != null && !KeepAliveService.sRoom.isEmpty()) {
+            try {
+                Intent i = new Intent(this, KeepAliveService.class);
+                i.putExtra("url", KeepAliveService.sUrl);
+                i.putExtra("room", KeepAliveService.sRoom);
+                i.putExtra("user", KeepAliveService.sUser);
+                i.putExtra("avatar", KeepAliveService.sAvatar);
+                if (Build.VERSION.SDK_INT >= 26) startForegroundService(i);
+                else startService(i);
+            } catch (Exception e) {
+            }
+        }
     }
 
     @Override
@@ -77,6 +90,8 @@ public class MainActivity extends BridgeActivity {
         super.onResume();
         SecretVibeService.taskRemoved = false;
         stopService(new Intent(this, SecretVibeService.class));
+        stopService(new Intent(this, KeepAliveService.class));
+        KeepAliveService.active = false;
     }
 
     @Override
@@ -165,6 +180,14 @@ public class MainActivity extends BridgeActivity {
                     }
                 }
             });
+        }
+
+        @JavascriptInterface
+        public void setKeepAlive(final String url, final String room, final String user, final String avatar) {
+            KeepAliveService.sUrl = url == null ? "" : url;
+            KeepAliveService.sRoom = room == null ? "" : room;
+            KeepAliveService.sUser = user == null ? "" : user;
+            KeepAliveService.sAvatar = avatar == null ? "\uD83D\uDC64" : avatar;
         }
 
         @JavascriptInterface
