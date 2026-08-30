@@ -65,13 +65,12 @@ public class MainActivity extends BridgeActivity {
                 int curHeight = r.height();
                 if (curHeight != lastHeight) {
                     lastHeight = curHeight;
-                    int fullH = webView.getRootView().getHeight();
-                    final int kbH = Math.max(0, fullH - curHeight);
+                    final int visibleH = curHeight;
                     webView.post(new Runnable() {
                         @Override
                         public void run() {
                             webView.evaluateJavascript(
-                                "if(window._onNativeKeyboard)window._onNativeKeyboard(" + kbH + ");",
+                                "if(window._onNativeKeyboard)window._onNativeKeyboard(" + visibleH + ");",
                                 null
                             );
                         }

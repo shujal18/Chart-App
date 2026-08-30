@@ -992,39 +992,24 @@ function sendMessage(){
   setTimeout(()=>{if(nearBottom())scrollBottom()},350);
 }
 
-// ========= KEYBOARD: Native Android keyboard height from Java =========
+// ========= KEYBOARD: Java sends exact visible height — no guessing =========
 (function(){
   var app=document.getElementById('app');
   if(!app)return;
   var screens=document.querySelectorAll('.screen');
-  var fullH=window.innerHeight;
-  var isOpen=false;
 
   function setH(h){
-    h=Math.max(200,Math.min(h,fullH));
     app.style.height=h+'px';
     screens.forEach(function(s){s.style.height=h+'px'});
-    if(isOpen)setTimeout(scrollBottom,100);
-    if(isOpen)setTimeout(scrollBottom,300);
+    setTimeout(scrollBottom,80);
+    setTimeout(scrollBottom,250);
   }
 
-  window._onNativeKeyboard=function(kbH){
-    if(kbH>50){
-      if(!isOpen){isOpen=true;fullH=window.innerHeight}
-      setH(fullH-kbH);
-    }else if(isOpen){
-      isOpen=false;
-      fullH=window.innerHeight;
-      setH(fullH);
-      setTimeout(scrollBottom,100);
-    }
+  window._onNativeKeyboard=function(visibleH){
+    setH(visibleH);
   };
 
-  window.addEventListener('resize',function(){
-    if(!isOpen){fullH=window.innerHeight;setH(fullH)}
-  });
-
-  setH(fullH);
+  setH(window.innerHeight);
 })();
 
 // ========= KEEP KEYBOARD OPEN when tapping composer buttons =========
