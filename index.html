@@ -3,13 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <title>Chat</title>
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=0,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover,interactive-widget=resizes-content">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💬</text></svg>">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{--bg:#0b141a;--header:#202c33;--input:#2a3942;--sent:#005c4b;--received:#202c33;--text:#e9edef;--secondary:#8696a0;--accent:#00a884;--blue-tick:#53bdeb;--hover:#2a3942;--divider:#111b21;--overlay:rgba(0,0,0,0.5);--danger:#ea4335}
-html,body{height:100%;width:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text)}
+html,body{height:100%;width:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
 body{position:fixed;top:0;left:0;right:0;bottom:0;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
 #app{width:100%;height:100%;max-width:480px;margin:0 auto;position:relative;overflow:hidden}
 .screen{display:none;position:absolute;top:0;left:0;width:100%;height:100%;flex-direction:column}
@@ -68,8 +68,7 @@ body{position:fixed;top:0;left:0;right:0;bottom:0;padding:env(safe-area-inset-to
 #chat .chat-header .header-actions{display:flex;gap:2px}
 #chat .chat-header .header-actions button{width:40px;height:40px;display:flex;align-items:center;justify-content:center;background:none;border:none;color:var(--text);font-size:18px;cursor:pointer;border-radius:50%}
 
-#chat{padding-bottom:0px}
-#chat .messages{flex:1;overflow-y:auto;padding:8px 12px;padding-bottom:70px;scroll-behavior:smooth;position:relative}
+#chat .messages{flex:1;min-height:0;overflow-y:auto;padding:8px 12px;scroll-behavior:smooth;position:relative}
 #chat .messages::-webkit-scrollbar{width:4px}
 #chat .messages::-webkit-scrollbar-thumb{background:rgba(255,255,255,.15);border-radius:4px}
 #chat .messages .chat-bg{position:absolute;top:0;left:0;right:0;bottom:0;opacity:.04;pointer-events:none;background-image:url("data:image/svg+xml,%3Csvg width='60' height='60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 5L35 15H25L30 5ZM15 20L25 20L20 30ZM45 20L55 20L50 30ZM30 35L40 35L35 45Z' fill='%23ffffff'/%3E%3C/svg%3E")}
@@ -117,7 +116,7 @@ body{position:fixed;top:0;left:0;right:0;bottom:0;padding:env(safe-area-inset-to
 #chat .reply-bar .reply-info .rp-text{font-size:12.5px;color:var(--secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #chat .reply-bar .reply-close{width:32px;height:32px;display:flex;align-items:center;justify-content:center;background:none;border:none;color:var(--secondary);font-size:18px;cursor:pointer}
 
-#chat .input-bar{background:var(--header);padding:6px 6px;padding-bottom:calc(6px + env(safe-area-inset-bottom,0px));display:flex;align-items:flex-end;gap:4px;flex-shrink:0;z-index:10;position:fixed;bottom:0;left:0;right:0;max-width:480px;margin:0 auto}
+#chat .input-bar{background:var(--header);padding:6px 6px;padding-bottom:calc(6px + env(safe-area-inset-bottom,0px));display:flex;align-items:flex-end;gap:4px;flex-shrink:0;z-index:10}
 #chat .input-bar .icon-btn{width:44px;height:44px;display:flex;align-items:center;justify-content:center;background:none;border:none;color:var(--secondary);font-size:22px;cursor:pointer;flex-shrink:0;border-radius:50%}
 #chat .input-bar .icon-btn.active{color:var(--accent)}
 #chat .input-bar .msg-input{flex:1;width:100%;background:var(--input);border:none;border-radius:24px;padding:10px 16px;color:var(--text);font-size:15px;outline:none;max-height:100px;overflow-y:auto;resize:none;line-height:1.4;min-height:44px;font-family:inherit}
@@ -154,7 +153,7 @@ body{position:fixed;top:0;left:0;right:0;bottom:0;padding:env(safe-area-inset-to
 /* Settings Panel */
 .settings-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:var(--overlay);z-index:100;justify-content:center;align-items:flex-end}
 .settings-overlay.active{display:flex}
-.settings-panel{background:var(--header);border-radius:16px 16px 0 0;width:100%;max-width:480px;max-height:50vh;overflow-y:auto;padding:16px 0}
+.settings-panel{background:var(--header);border-radius:16px 16px 0 0;width:100%;max-width:480px;max-height:50vh;overflow-y:auto;padding:16px 0;padding-bottom:calc(16px + env(safe-area-inset-bottom,0px))}
 .settings-panel .settings-title{padding:0 20px 12px;font-size:18px;font-weight:500;border-bottom:1px solid rgba(255,255,255,.05)}
 .settings-panel button{width:100%;padding:16px 20px;background:none;border:none;color:var(--text);font-size:15px;text-align:left;cursor:pointer;display:flex;align-items:center;gap:14px;transition:background .15s}
 .settings-panel button:hover{background:var(--hover)}
@@ -163,7 +162,7 @@ body{position:fixed;top:0;left:0;right:0;bottom:0;padding:env(safe-area-inset-to
 .settings-panel button.danger i{color:var(--danger)}
 
 /* Toast */
-.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:var(--header);color:var(--text);padding:10px 20px;border-radius:20px;font-size:13px;z-index:200;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap}
+.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:var(--header);color:var(--text);padding:10px 20px;border-radius:20px;font-size:13px;z-index:200;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap;max-width:calc(100vw - 40px)}
 .toast.show{opacity:1}
 
 /* ===== Modern features ===== */
@@ -205,7 +204,8 @@ body:not(.light){--chip-bg:rgba(17,27,33,.85);--chip-fg:var(--secondary);--time-
 #micBtn.hidden,#sendBtn.hidden{display:none!important}
 
 /* Scroll to bottom FAB */
-.scroll-fab{position:absolute;right:14px;bottom:76px;width:42px;height:42px;border-radius:50%;background:var(--header);color:var(--secondary);border:none;box-shadow:0 2px 8px var(--shadow);cursor:pointer;display:none;align-items:center;justify-content:center;z-index:20;font-size:16px}
+.scroll-fab{position:fixed;right:calc(50% - 240px + 14px);bottom:80px;width:42px;height:42px;border-radius:50%;background:var(--header);color:var(--secondary);border:none;box-shadow:0 2px 8px var(--shadow);cursor:pointer;display:none;align-items:center;justify-content:center;z-index:20;font-size:16px}
+@media(max-width:480px){.scroll-fab{right:14px}}
 .scroll-fab.show{display:flex}
 .scroll-fab .fab-badge{position:absolute;top:-5px;right:-5px;background:var(--accent);color:#fff;font-size:10.5px;min-width:18px;height:18px;border-radius:9px;display:flex;align-items:center;justify-content:center;padding:0 4px;font-weight:600}
 
@@ -217,6 +217,38 @@ body:not(.light){--chip-bg:rgba(17,27,33,.85);--chip-fg:var(--secondary);--time-
 .img-viewer.active{display:flex}
 .img-viewer img{max-width:100%;max-height:100%;object-fit:contain}
 .img-viewer .iv-close{position:absolute;top:calc(10px + env(safe-area-inset-top));right:12px;width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.14);color:#fff;border:none;font-size:18px;cursor:pointer;z-index:2}
+
+/* ===== RESPONSIVE: Small phones (<360px) ===== */
+@media(max-width:360px){
+  #password .pw-icon{font-size:48px}
+  #password h2{font-size:18px}
+  #password .pw-key{font-size:20px;border-radius:10px}
+  #password .pw-dots{gap:10px}
+  #password .pw-dot{width:12px;height:12px}
+  #setup .logo{font-size:40px}
+  #setup h2{font-size:19px}
+  #setup .avatar-option{width:42px;height:42px;font-size:22px}
+  #setup input,#setup button,#room input,#room button{padding:12px 14px;font-size:14px}
+  #room h2{font-size:18px}
+  .message .msg-text{font-size:13.5px}
+  .message .msg-img{max-width:200px}
+  .emoji-picker .emoji-item{font-size:20px}
+}
+
+/* ===== RESPONSIVE: Regular phones (361-480px) — default ===== */
+
+/* ===== RESPONSIVE: Large phones / small tablets (481-768px) ===== */
+@media(min-width:481px){
+  #app{border-left:1px solid var(--divider);border-right:1px solid var(--divider)}
+}
+
+/* ===== RESPONSIVE: Tablets (769px+) ===== */
+@media(min-width:769px){
+  body{display:flex;align-items:center;justify-content:center}
+  #app{height:min(100vh, 800px);border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.3)}
+  .settings-overlay{align-items:center}
+  .settings-panel{border-radius:16px;max-height:70vh;margin:0 auto}
+}
 </style>
 </head>
 <body>
@@ -960,21 +992,21 @@ function sendMessage(){
   setTimeout(()=>{if(nearBottom())scrollBottom()},350);
 }
 
-// ========= KEYBOARD: keep last message above keyboard (WhatsApp-style) =========
+// ========= KEYBOARD: scroll to bottom when keyboard opens/closes =========
 (function(){
   if(!window.visualViewport)return;
   var lastVVH=visualViewport.height;
   visualViewport.addEventListener('resize',function(){
     var cur=visualViewport.height;
-    if(cur>lastVVH+50){
-      setTimeout(function(){scrollBottom()},150);
-    }else if(lastVVH>cur+50){
-      setTimeout(function(){scrollBottom()},150);
+    var delta=Math.abs(cur-lastVVH);
+    if(delta>30){
+      setTimeout(function(){scrollBottom()},100);
+      setTimeout(function(){scrollBottom()},300);
     }
     lastVVH=cur;
   });
   window.addEventListener('resize',function(){
-    setTimeout(function(){if(nearBottom())scrollBottom()},150);
+    setTimeout(function(){scrollBottom()},150);
   });
 })();
 
