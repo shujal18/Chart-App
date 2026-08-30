@@ -10,52 +10,53 @@
 *{margin:0;padding:0;box-sizing:border-box}
 :root{--bg:#0b141a;--header:#202c33;--input:#2a3942;--sent:#005c4b;--received:#202c33;--text:#e9edef;--secondary:#8696a0;--accent:#00a884;--blue-tick:#53bdeb;--hover:#2a3942;--divider:#111b21;--overlay:rgba(0,0,0,0.5);--danger:#ea4335}
 html,body{height:100%;width:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
-body{position:fixed;top:0;left:0;right:0;bottom:0;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+body{padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
 #app{width:100%;height:100%;max-width:480px;margin:0 auto;position:relative;overflow:hidden;transition:none}
 .screen{display:none;position:absolute;top:0;left:0;width:100%;height:100%;flex-direction:column}
 .screen.active{display:flex}
 
 /* Password Screen */
-#password{background:var(--bg);align-items:center;justify-content:center;padding:20px}
-#password .pw-icon{font-size:60px;margin-bottom:16px}
-#password h2{font-size:20px;margin-bottom:24px;font-weight:400;color:var(--secondary)}
-#password .pw-dots{display:flex;gap:12px;margin-bottom:24px}
-#password .pw-dot{width:14px;height:14px;border-radius:50%;background:var(--input);transition:background .2s}
+#password{background:var(--bg);align-items:center;justify-content:center;padding:16px;height:100%;overflow:hidden}
+#password .pw-icon{font-size:56px;margin-bottom:12px}
+#password h2{font-size:19px;margin-bottom:18px;font-weight:400;color:var(--secondary)}
+#password .pw-dots{display:flex;gap:10px;margin-bottom:18px}
+#password .pw-dot{width:13px;height:13px;border-radius:50%;background:var(--input);transition:background .2s}
 #password .pw-dot.filled{background:var(--accent)}
-#password .pw-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;max-width:260px;width:100%}
-#password .pw-key{width:100%;aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:500;border:none;border-radius:12px;background:var(--input);color:var(--text);cursor:pointer;transition:background .15s}
+#password .pw-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;max-width:240px;width:100%}
+#password .pw-key{width:100%;aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:500;border:none;border-radius:12px;background:var(--input);color:var(--text);cursor:pointer;transition:background .15s;min-height:52px}
 #password .pw-key:active{background:var(--hover)}
 #password .pw-key.empty{background:transparent;cursor:default}
-#password .pw-key.del{font-size:16px;color:var(--danger)}
-#password .pw-err{color:var(--danger);font-size:13px;margin-top:12px;min-height:18px}
+#password .pw-key.del{font-size:15px;color:var(--danger)}
+#password .pw-err{color:var(--danger);font-size:12px;margin-top:10px;min-height:16px}
 
 /* Setup Screen */
-#setup{background:var(--bg);align-items:center;justify-content:center;padding:20px}
-#setup .logo{font-size:48px;margin-bottom:8px}
-#setup h2{font-size:22px;margin-bottom:20px;font-weight:400}
-#setup .avatar-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-bottom:20px;max-width:320px;width:100%}
-#setup .avatar-option{width:48px;height:48px;display:flex;align-items:center;justify-content:center;font-size:26px;border-radius:50%;border:2px solid transparent;cursor:pointer;transition:all .2s;background:var(--header)}
+#setup{background:var(--bg);align-items:center;justify-content:center;padding:16px;height:100%;overflow:hidden}
+#setup .logo{font-size:42px;margin-bottom:6px}
+#setup h2{font-size:20px;margin-bottom:14px;font-weight:400}
+#setup .avatar-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;margin-bottom:14px;max-width:280px;width:100%}
+#setup .avatar-option{width:42px;height:42px;display:flex;align-items:center;justify-content:center;font-size:22px;border-radius:50%;border:2px solid transparent;cursor:pointer;transition:all .2s;background:var(--header)}
 #setup .avatar-option:hover{border-color:var(--secondary)}
 #setup .avatar-option.selected{border-color:var(--accent);background:rgba(0,168,132,.15)}
-#setup input{width:100%;max-width:320px;padding:14px 16px;border:none;border-radius:12px;background:var(--input);color:var(--text);font-size:16px;outline:none;margin-bottom:16px}
+#setup input{width:100%;max-width:280px;padding:12px 14px;border:none;border-radius:12px;background:var(--input);color:var(--text);font-size:15px;outline:none;margin-bottom:12px}
 #setup input::placeholder{color:var(--secondary)}
-#setup button{width:100%;max-width:320px;padding:14px;border:none;border-radius:12px;background:var(--accent);color:#fff;font-size:16px;font-weight:500;cursor:pointer;transition:opacity .2s}
+#setup button{width:100%;max-width:280px;padding:12px;border:none;border-radius:12px;background:var(--accent);color:#fff;font-size:15px;font-weight:500;cursor:pointer;transition:opacity .2s}
 #setup button:disabled{opacity:.4;cursor:not-allowed}
 
 /* Room Screen */
-#room{background:var(--bg);align-items:center;justify-content:center;padding:20px}
-#room h2{font-size:20px;margin-bottom:24px;font-weight:400}
-#room .room-section{width:100%;max-width:320px;margin-bottom:24px}
-#room .room-section p{color:var(--secondary);font-size:13px;margin-bottom:10px;text-align:center}
-#room input{width:100%;padding:14px 16px;border:none;border-radius:12px;background:var(--input);color:var(--text);font-size:16px;outline:none;margin-bottom:10px;text-transform:uppercase;letter-spacing:1px;text-align:center}
+#room{background:var(--bg);align-items:center;justify-content:center;padding:16px;height:100%;overflow:hidden}
+#room h2{font-size:19px;margin-bottom:18px;font-weight:400}
+#room .room-section{width:100%;max-width:280px;margin-bottom:18px}
+#room .room-section p{color:var(--secondary);font-size:12px;margin-bottom:8px;text-align:center}
+#room input{width:100%;padding:12px 14px;border:none;border-radius:12px;background:var(--input);color:var(--text);font-size:15px;outline:none;margin-bottom:8px;text-transform:uppercase;letter-spacing:1px;text-align:center}
 #room input::placeholder{text-transform:none;letter-spacing:normal}
-#room button{width:100%;padding:14px;border:none;border-radius:12px;background:var(--accent);color:#fff;font-size:16px;font-weight:500;cursor:pointer;transition:opacity .2s}
-#room .divider{display:flex;align-items:center;width:100%;max-width:320px;margin:16px 0;color:var(--secondary);font-size:13px}
+#room button{width:100%;padding:12px;border:none;border-radius:12px;background:var(--accent);color:#fff;font-size:15px;font-weight:500;cursor:pointer;transition:opacity .2s}
+#room .divider{display:flex;align-items:center;width:100%;max-width:280px;margin:12px 0;color:var(--secondary);font-size:12px}
 #room .divider::before,#room .divider::after{content:'';flex:1;height:1px;background:var(--input)}
-#room .divider span{padding:0 12px}
+#room .divider span{padding:0 10px}
 
 /* Chat Screen */
 #chat{background:var(--bg)}
+#chat.active{display:flex;flex-direction:column;height:100%;position:relative}
 #chat .chat-header{background:var(--header);padding:10px 8px;display:flex;align-items:center;gap:8px;flex-shrink:0;z-index:10}
 #chat .chat-header .back-btn{width:40px;height:40px;display:flex;align-items:center;justify-content:center;background:none;border:none;color:var(--text);font-size:20px;cursor:pointer;border-radius:50%}
 #chat .chat-header .header-avatar{width:40px;height:40px;border-radius:50%;background:var(--input);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
@@ -220,19 +221,19 @@ body:not(.light){--chip-bg:rgba(17,27,33,.85);--chip-fg:var(--secondary);--time-
 
 /* ===== RESPONSIVE: Small phones (<360px) ===== */
 @media(max-width:360px){
-  #password .pw-icon{font-size:48px}
-  #password h2{font-size:18px}
-  #password .pw-key{font-size:20px;border-radius:10px}
-  #password .pw-dots{gap:10px}
-  #password .pw-dot{width:12px;height:12px}
-  #setup .logo{font-size:40px}
-  #setup h2{font-size:19px}
-  #setup .avatar-option{width:42px;height:42px;font-size:22px}
-  #setup input,#setup button,#room input,#room button{padding:12px 14px;font-size:14px}
-  #room h2{font-size:18px}
-  .message .msg-text{font-size:13.5px}
-  .message .msg-img{max-width:200px}
-  .emoji-picker .emoji-item{font-size:20px}
+  #password .pw-icon{font-size:44px}
+  #password h2{font-size:17px}
+  #password .pw-key{font-size:18px;border-radius:10px;min-height:46px}
+  #password .pw-dots{gap:8px}
+  #password .pw-dot{width:11px;height:11px}
+  #setup .logo{font-size:36px}
+  #setup h2{font-size:17px}
+  #setup .avatar-option{width:38px;height:38px;font-size:20px}
+  #setup input,#setup button,#room input,#room button{padding:10px 12px;font-size:13px}
+  #room h2{font-size:17px}
+  .message .msg-text{font-size:13px}
+  .message .msg-img{max-width:180px}
+  .emoji-picker .emoji-item{font-size:18px}
 }
 
 /* ===== RESPONSIVE: Regular phones (361-480px) — default ===== */
@@ -647,7 +648,6 @@ function updateChatHead(){
 }
 
 // ========= SECRET ROOM: REMOTE NUDGE / VIBRATE =========
-let lastNudgeSent=0;
 function vibrateDevice(pattern){
   let ok=false;
   try{if(window.AndroidNative){AndroidNative.vibrate(pattern.join(','));ok=true}}catch(e){}
@@ -655,7 +655,7 @@ function vibrateDevice(pattern){
 }
 function onNudge(data){
   playSound('join');
-  vibrateDevice([0,350,120,350,120,350]);
+  vibrateDevice([0,100,80,100,80,100,80,100]);
   showToast((data.avatar||'👋')+' '+(data.from||'Someone')+' nudged you!');
 }
 
@@ -992,25 +992,8 @@ function sendMessage(){
   setTimeout(()=>{if(nearBottom())scrollBottom()},350);
 }
 
-// ========= KEYBOARD: Java sends exact visible height — no guessing =========
-(function(){
-  var app=document.getElementById('app');
-  if(!app)return;
-  var screens=document.querySelectorAll('.screen');
-
-  function setH(h){
-    app.style.height=h+'px';
-    screens.forEach(function(s){s.style.height=h+'px'});
-    setTimeout(scrollBottom,80);
-    setTimeout(scrollBottom,250);
-  }
-
-  window._onNativeKeyboard=function(visibleH){
-    setH(visibleH);
-  };
-
-  setH(window.innerHeight);
-})();
+// ========= KEYBOARD: Let native adjustResize + CSS flexbox handle everything =========
+// WhatsApp-style: no JS keyboard height calculation needed
 
 // ========= KEEP KEYBOARD OPEN when tapping composer buttons =========
 ['sendBtn','micBtn','emojiBtn','photoBtn'].forEach(id=>{
@@ -1053,11 +1036,8 @@ $('#settingsChatHead').addEventListener('click',()=>{
 });
 $('#settingsVibrate').addEventListener('click',()=>{
   if(!ws||ws.readyState!==1){showToast('Not connected');return}
-  const now=Date.now();
-  if(now-lastNudgeSent<3000){showToast('Wait a moment before nudging again');return}
-  lastNudgeSent=now;
   ws.send(JSON.stringify({type:'nudge'}));
-  vibrateDevice([0,80]);
+  vibrateDevice([0,80,50,80,50,80,50,80,50,80]);
   showToast('👋 Nudge sent!');
   $('#settingsOverlay').classList.remove('active');
 });

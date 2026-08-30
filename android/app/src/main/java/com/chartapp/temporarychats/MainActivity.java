@@ -4,7 +4,6 @@ import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.graphics.Rect;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -12,7 +11,6 @@ import android.os.VibrationEffect;
 import android.os.Vibrator;
 import android.os.VibratorManager;
 import android.provider.Settings;
-import android.view.ViewTreeObserver;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
@@ -54,30 +52,6 @@ public class MainActivity extends BridgeActivity {
 
         webView.setWebContentsDebuggingEnabled(true);
         webView.addJavascriptInterface(new NativeBridge(), "AndroidNative");
-
-        final ViewTreeObserver observer = webView.getViewTreeObserver();
-        observer.addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
-            private int lastHeight = -1;
-            @Override
-            public void onGlobalLayout() {
-                Rect r = new Rect();
-                webView.getWindowVisibleDisplayFrame(r);
-                int curHeight = r.height();
-                if (curHeight != lastHeight) {
-                    lastHeight = curHeight;
-                    final int visibleH = curHeight;
-                    webView.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            webView.evaluateJavascript(
-                                "if(window._onNativeKeyboard)window._onNativeKeyboard(" + visibleH + ");",
-                                null
-                            );
-                        }
-                    });
-                }
-            }
-        });
 
         requestAppPermissions();
     }

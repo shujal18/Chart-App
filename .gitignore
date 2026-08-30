@@ -3,3 +3,6 @@ android/
 www/
 TemporaryChats.apk
 capacitor.config.json
+chat.db
+chat.db-*
+db/
