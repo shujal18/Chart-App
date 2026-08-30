@@ -992,24 +992,74 @@ function sendMessage(){
   setTimeout(()=>{if(nearBottom())scrollBottom()},350);
 }
 
-// ========= KEYBOARD: WhatsApp-style — resize app to visual viewport =========
+// ========= KEYBOARD: Works on MIUI where adjustResize is ignored =========
 (function(){
-  if(!window.visualViewport)return;
   var app=document.getElementById('app');
-  var lastH=0;
-  function sync(){
-    var h=Math.round(visualViewport.height);
-    var t=Math.round(visualViewport.offsetTop);
-    if(h===lastH)return;
-    lastH=h;
+  if(!app)return;
+  var screens=document.querySelectorAll('.screen');
+  var fullH=window.innerHeight||screen.height;
+  var isOpen=false;
+  var kbH=Math.round(fullH*0.42);
+
+  function setH(h){
+    h=Math.max(200,Math.min(h,fullH));
     app.style.height=h+'px';
-    app.style.top=t+'px';
-    setTimeout(function(){scrollBottom()},80);
-    setTimeout(function(){scrollBottom()},250);
+    screens.forEach(function(s){s.style.height=h+'px'});
+    if(isOpen)setTimeout(scrollBottom,100);
+    if(isOpen)setTimeout(scrollBottom,300);
   }
-  visualViewport.addEventListener('resize',sync);
-  visualViewport.addEventListener('scroll',sync);
-  sync();
+
+  function open(){
+    if(isOpen)return;
+    isOpen=true;
+    fullH=window.innerHeight||screen.height;
+    kbH=Math.round(fullH*0.42);
+    setH(fullH-kbH);
+  }
+
+  function close(){
+    if(!isOpen)return;
+    isOpen=false;
+    fullH=window.innerHeight||screen.height;
+    setH(fullH);
+    setTimeout(scrollBottom,100);
+  }
+
+  function isInput(el){
+    return el&&(el.tagName==='INPUT'||el.tagName==='TEXTAREA');
+  }
+
+  document.addEventListener('focusin',function(e){
+    if(isInput(e.target))setTimeout(open,80);
+  });
+
+  document.addEventListener('focusout',function(e){
+    if(isInput(e.target))setTimeout(close,80);
+  });
+
+  if(window.visualViewport){
+    visualViewport.addEventListener('resize',function(){
+      var vh=visualViewport.height;
+      if(vh<fullH-60){
+        isOpen=true;
+        setH(vh);
+      }else if(isOpen){
+        close();
+      }
+    });
+  }
+
+  window.addEventListener('resize',function(){
+    var cur=window.innerHeight;
+    if(cur<fullH-60){
+      isOpen=true;
+      setH(cur);
+    }else if(isOpen){
+      close();
+    }
+  });
+
+  setH(fullH);
 })();
 
 // ========= KEEP KEYBOARD OPEN when tapping composer buttons =========
