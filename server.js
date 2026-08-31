@@ -80,10 +80,15 @@ wss.on("connection", (ws) => {
                     if (!rooms[targetRoom]) rooms[targetRoom] = { users: new Set(), messages: [], lastActivity: Date.now() };
                     const maxUsers = targetRoom === "SK_ROOM" ? SECRET_ROOM_MAX : MAX_PER_ROOM;
                     const unameKey = (data.username || "").trim().toLowerCase();
-                    const existingKeys = [...rooms[targetRoom].users].filter(u => !u.silent).map(u => (u.username || "").trim().toLowerCase());
-                    const nameTaken = existingKeys.includes(unameKey);
-                    const roomFull = rooms[targetRoom].users.size >= maxUsers;
-                    if (roomFull || nameTaken) {
+                    const silentJoin = !!data.silent || !!data.background;
+                    const activeNames = new Set(
+                        [...rooms[targetRoom].users]
+                            .filter(u => !u.silent)
+                            .map(u => (u.username || "").trim().toLowerCase())
+                    );
+                    const nameTaken = activeNames.has(unameKey);
+                    const roomFull = activeNames.size >= maxUsers;
+                    if (!silentJoin && (roomFull || nameTaken)) {
                         const msg = nameTaken ? "Name already taken in this room!" : (targetRoom === "SK_ROOM" ? "Secret room is full! Only 2 users allowed." : "Room is full!");
                         ws.send(JSON.stringify({ type: "error", message: msg }));
                         return;
@@ -91,7 +96,7 @@ wss.on("connection", (ws) => {
                     ws.room = targetRoom;
                     ws.username = data.username;
                     ws.avatar = data.avatar;
-                    ws.silent = !!data.silent;
+                    ws.silent = silentJoin;
                     rooms[ws.room].users.add(ws);
                     rooms[ws.room].lastActivity = Date.now();
 
@@ -215,16 +220,13 @@ wss.on("connection", (ws) => {
         if (ws.room && rooms[ws.room]) {
             const room = ws.room;
             rooms[room].users.delete(ws);
-            if (ws.silent) {
-                if (rooms[room].users.size === 0) delete rooms[room];
-            } else {
-                const stillConnected = [...rooms[room].users].some(u =>
-                    !u.silent &&
-                    (u.username || "").trim().toLowerCase() === (ws.username || "").trim().toLowerCase());
-                if (!stillConnected) broadcast(room, { type: "system", text: `${ws.username} left.` });
-                if (rooms[room].users.size === 0) delete rooms[room];
-                else broadcastOnline(room);
+            const stillThere = [...rooms[room].users].some(u =>
+                (u.username || "").trim().toLowerCase() === (ws.username || "").trim().toLowerCase());
+            if (!stillThere && !ws.silent) {
+                broadcast(room, { type: "system", text: `${ws.username} left.` });
             }
+            if (!stillThere) broadcastOnline(room);
+            if (rooms[room].users.size === 0) delete rooms[room];
         }
     });
 });
@@ -242,7 +244,6 @@ function broadcastOnline(room) {
     const seen = new Set();
     const users = [];
     for (const u of rooms[room].users) {
-        if (u.silent) continue;
         const key = (u.username || "").trim().toLowerCase();
         if (!seen.has(key)) { seen.add(key); users.push({ name: u.username, avatar: u.avatar }); }
     }
