@@ -11,6 +11,7 @@ import android.os.VibrationEffect;
 import android.os.Vibrator;
 import android.os.VibratorManager;
 import android.provider.Settings;
+import android.graphics.Color;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
@@ -52,6 +53,11 @@ public class MainActivity extends BridgeActivity {
 
         webView.setWebContentsDebuggingEnabled(true);
         webView.addJavascriptInterface(new NativeBridge(), "AndroidNative");
+
+        webView.setBackgroundColor(Color.parseColor("#0b141a"));
+        if (getWindow() != null && getWindow().getDecorView() != null) {
+            getWindow().getDecorView().setBackgroundColor(Color.parseColor("#0b141a"));
+        }
 
         requestAppPermissions();
     }
@@ -171,7 +177,11 @@ public class MainActivity extends BridgeActivity {
                         }
                         if (vib != null && vib.hasVibrator()) {
                             if (Build.VERSION.SDK_INT >= 26) {
-                                vib.vibrate(VibrationEffect.createWaveform(pattern, -1));
+                                int[] amplitudes = new int[pattern.length];
+                                for (int i = 0; i < pattern.length; i++) {
+                                    amplitudes[i] = (pattern[i] > 0) ? 255 : 0;
+                                }
+                                vib.vibrate(VibrationEffect.createWaveform(pattern, amplitudes, -1));
                             } else {
                                 vib.vibrate(pattern, -1);
                             }

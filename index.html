@@ -10,7 +10,7 @@
 *{margin:0;padding:0;box-sizing:border-box}
 :root{--bg:#0b141a;--header:#202c33;--input:#2a3942;--sent:#005c4b;--received:#202c33;--text:#e9edef;--secondary:#8696a0;--accent:#00a884;--blue-tick:#53bdeb;--hover:#2a3942;--divider:#111b21;--overlay:rgba(0,0,0,0.5);--danger:#ea4335}
 html,body{height:100%;width:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
-body{padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+body{position:fixed;top:0;left:0;right:0;bottom:0;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
 #app{width:100%;height:100%;max-width:480px;margin:0 auto;position:relative;overflow:hidden;transition:none}
 .screen{display:none;position:absolute;top:0;left:0;width:100%;height:100%;flex-direction:column}
 .screen.active{display:flex}
@@ -656,7 +656,7 @@ function vibrateDevice(pattern){
 }
 function onNudge(data){
   playSound('join');
-  vibrateDevice([0,100,80,100,80,100,80,100]);
+  vibrateDevice([0,450,150,450,150,450,150,450,150,450]);
   showToast((data.avatar||'👋')+' '+(data.from||'Someone')+' nudged you!');
 }
 
@@ -993,8 +993,9 @@ function sendMessage(){
   setTimeout(()=>{if(nearBottom())scrollBottom()},350);
 }
 
-// ========= KEYBOARD: Let native adjustResize + CSS flexbox handle everything =========
-// WhatsApp-style: no JS keyboard height calculation needed
+// ========= KEYBOARD: Pure CSS (v1.1 style) — body{position:fixed} + flex column =========
+// No JS keyboard-height calculation. adjustResize + body{position:fixed} keeps the
+// bottom bar pinned above the keyboard on all devices including MIUI/Redmi 9A.
 
 // ========= KEEP KEYBOARD OPEN when tapping composer buttons =========
 ['sendBtn','micBtn','emojiBtn','photoBtn'].forEach(id=>{
