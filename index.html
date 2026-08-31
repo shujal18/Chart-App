@@ -655,7 +655,6 @@ function vibrateDevice(pattern){
   if(!ok){try{if(navigator.vibrate&&navigator.vibrate(pattern))ok=true}catch(e){}}
 }
 function onNudge(data){
-  playSound('join');
   vibrateDevice([0,450,150,450,150,450,150,450,150,450]);
   showToast((data.avatar||'👋')+' '+(data.from||'Someone')+' nudged you!');
 }
