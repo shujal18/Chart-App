@@ -199,8 +199,13 @@ wss.on("connection", (ws) => {
 
             if (data.type === "leave_room" && ws.room) {
                 const room = ws.room;
-                ws.room = null;
-                rooms[room].users.delete(ws);
+                const leavingName = (ws.username || "").trim().toLowerCase();
+                for (const u of [...rooms[room].users]) {
+                    if ((u.username || "").trim().toLowerCase() === leavingName) {
+                        u.room = null;
+                        rooms[room].users.delete(u);
+                    }
+                }
                 broadcast(room, { type: "system", text: `${ws.username} left.` });
                 if (rooms[room].users.size === 0) delete rooms[room];
                 else broadcastOnline(room);
