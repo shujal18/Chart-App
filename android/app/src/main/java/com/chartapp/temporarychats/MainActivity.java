@@ -96,8 +96,6 @@ public class MainActivity extends BridgeActivity {
         super.onResume();
         SecretVibeService.taskRemoved = false;
         stopService(new Intent(this, SecretVibeService.class));
-        stopService(new Intent(this, KeepAliveService.class));
-        KeepAliveService.active = false;
     }
 
     @Override
@@ -198,6 +196,21 @@ public class MainActivity extends BridgeActivity {
             KeepAliveService.sRoom = room == null ? "" : room;
             KeepAliveService.sUser = user == null ? "" : user;
             KeepAliveService.sAvatar = avatar == null ? "\uD83D\uDC64" : avatar;
+
+            if (!KeepAliveService.sUrl.isEmpty() && !KeepAliveService.sRoom.isEmpty() && !KeepAliveService.sUser.isEmpty()) {
+                try {
+                    Intent i = new Intent(MainActivity.this, KeepAliveService.class);
+                    i.putExtra("url", KeepAliveService.sUrl);
+                    i.putExtra("room", KeepAliveService.sRoom);
+                    i.putExtra("user", KeepAliveService.sUser);
+                    i.putExtra("avatar", KeepAliveService.sAvatar);
+                    if (Build.VERSION.SDK_INT >= 26) startForegroundService(i);
+                    else startService(i);
+                } catch (Exception e) {
+                }
+            } else {
+                stopService(new Intent(MainActivity.this, KeepAliveService.class));
+            }
         }
 
         @JavascriptInterface

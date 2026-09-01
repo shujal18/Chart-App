@@ -89,9 +89,21 @@ wss.on("connection", (ws) => {
                     const nameTaken = activeNames.has(unameKey);
                     const roomFull = activeNames.size >= maxUsers;
                     if (!silentJoin && (roomFull || nameTaken)) {
-                        const msg = nameTaken ? "Name already taken in this room!" : (targetRoom === "SK_ROOM" ? "Secret room is full! Only 2 users allowed." : "Room is full!");
-                        ws.send(JSON.stringify({ type: "error", message: msg }));
-                        return;
+                        if (nameTaken) {
+                            // Same user reconnecting with a stale socket still registered.
+                            // Evict the old non-silent socket(s) with this name and allow rejoin.
+                            for (const u of [...rooms[targetRoom].users]) {
+                                if (!u.silent && (u.username || "").trim().toLowerCase() === unameKey) {
+                                    u.room = null;
+                                    rooms[targetRoom].users.delete(u);
+                                    try { u.close(4000, "Replaced by new session"); } catch (e) { }
+                                }
+                            }
+                        } else {
+                            const msg = targetRoom === "SK_ROOM" ? "Secret room is full! Only 2 users allowed." : "Room is full!";
+                            ws.send(JSON.stringify({ type: "error", message: msg }));
+                            return;
+                        }
                     }
                     ws.room = targetRoom;
                     ws.username = data.username;
